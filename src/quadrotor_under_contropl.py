@@ -135,13 +135,15 @@ def move():
 # --- start ----------------------------------------------------------------
 #
 # Spin the motors and servo on current position. To be called interactively
+# I have changed the folder to file path to save the log files
+# The below has been changed to save
 def start():
-  pom.log_state('/tmp/pom.log')
-  pom.log_measurements('/tmp/pom-measurements.log')
+  pom.log_state('../logs/01_Quadrotor/pom.log')
+  pom.log_measurements('../logs/01_Quadrotor/pom-measurements.log')
 
-  optitrack.set_logfile('/tmp/opti.log')
+  optitrack.set_logfile('../logs/01_Quadrotor/opti.log')
 
-  rotorcraft.log('/tmp/rotorcraft.log')
+  rotorcraft.log('../logs/01_Quadrotor/rotorcraft.log')
   rotorcraft.start()
   rotorcraft.servo(ack=True) # this runs until stopped or input error
 
