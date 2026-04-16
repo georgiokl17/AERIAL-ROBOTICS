@@ -16,6 +16,7 @@ mylog = pd.read_csv(
 # print(mylog['x'])
 #configuring time
 time = mylog['ts']-mylog['ts'].iloc[0]
+#first figure for position and velocity and acc
 fig,ax = plt.subplots(3,2)
 
 #subplot of x y z values
@@ -35,6 +36,34 @@ ax[0,1].plot(time, mylog['yaw'], color='blue',label='yaw')
 ax[0,1].set_xlabel('time')
 ax[0,1].legend()
 ax[0,1].grid()
+
+#subplot of vx vy vz values
+ax[1,0].set_ylim(-2,2)
+ax[1,0].plot(time, mylog['vx'], color='red', label='x_vel')
+ax[1,0].plot(time, mylog['vy'], color='green', label='y_vel')
+ax[1,0].plot(time, mylog['vz'], color='blue',label='z_vel')
+ax[1,0].set_xlabel('time')
+ax[1,0].legend()
+ax[1,0].grid()
+
+#subplot of wx wy wz values
+ax[1,1].set_ylim(-3,3)
+ax[1,1].plot(time, mylog['wx'], color='red', label='wx')
+ax[1,1].plot(time, mylog['wy'], color='green', label='wy')
+ax[1,1].plot(time, mylog['wz'], color='blue',label='wz')
+ax[1,1].set_xlabel('time')
+ax[1,1].legend()
+ax[1,1].grid()
+
+#subplot of ax ay az values
+ax[2,0].set_ylim(-4,4)
+ax[2,0].plot(time, mylog['ax'], color='red', label='x_acc')
+ax[2,0].plot(time, mylog['ay'], color='green', label='y_acc')
+ax[2,0].plot(time, mylog['az'], color='blue',label='z_acc')
+ax[2,0].set_xlabel('time')
+ax[2,0].legend()
+ax[2,0].grid()
+
 
 
 
