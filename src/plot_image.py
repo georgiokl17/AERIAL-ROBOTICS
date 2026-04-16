@@ -64,6 +64,7 @@ ax[2,0].set_xlabel('time')
 ax[2,0].legend()
 ax[2,0].grid()
 
+#for errors
 mynhfclog = pd.read_csv(
     '../logs/01_Quadrotor/nhfc.log',
     delimiter=r'\s+',
@@ -110,6 +111,16 @@ ax[1,1].set_xlabel('time')
 ax[1,1].legend()
 ax[1,1].grid()
 
+# #for forces
+# myrotorcraftlog = pd.read_csv(
+#     '../logs/01_Quadrotor/nhfc.log',
+#     delimiter=r'\s+',
+#     engine='python',
+#     na_values=['-', 'nan'],
+#     comment='#'
+# )
+# time3 = mynhfclog['ts']-mylog['ts'].iloc[0]
 
 
-plt.show()
+
+# plt.show()

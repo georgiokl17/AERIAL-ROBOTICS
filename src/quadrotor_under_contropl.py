@@ -54,10 +54,13 @@ def setup():
   # nhfc
   #
   # configure quadrotor geometry: 4 rotors, not tilted, 23cm arms
-  nhfc.set_gtmrp_geom({
+  geom = {
     'rotors': 4, 'cx': 0, 'cy': 0, 'cz': 0, 'armlen': 0.23, 'mass': 1.28,
-    'rx':0, 'ry': 0, 'rz': -1, 'cf': 6.5e-4, 'ct': 1e-5
-  })
+    'rx': 0, 'ry': 0, 'rz': -1, 'cf': 6.5e-4, 'ct': 1e-5
+  }
+
+  nhfc.set_gtmrp_geom(geom) #changed this only to have the cf as a variable we can use
+  
 
   # emergency descent parameters
   nhfc.set_emerg({'emerg': {
