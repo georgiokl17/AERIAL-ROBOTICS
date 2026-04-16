@@ -2,7 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd # Conventional alias
 import os
-
+#from quadrotor_under_contropl import geom 
+#the above import is not working
 # os.chdir("../logs/01_Quadrotor")
 
 mylog = pd.read_csv(
@@ -111,16 +112,21 @@ ax[1,1].set_xlabel('time')
 ax[1,1].legend()
 ax[1,1].grid()
 
-# #for forces
-# myrotorcraftlog = pd.read_csv(
-#     '../logs/01_Quadrotor/nhfc.log',
-#     delimiter=r'\s+',
-#     engine='python',
-#     na_values=['-', 'nan'],
-#     comment='#'
-# )
-# time3 = mynhfclog['ts']-mylog['ts'].iloc[0]
+#for forces
+myrotorcraftlog = pd.read_csv(
+    '../logs/01_Quadrotor/nhfc.log',
+    delimiter=r'\s+',
+    engine='python',
+    na_values=['-', 'nan'],
+    comment='#'
+)
+# time3 = myrotorcraftlog['ts']-mylog['ts'].iloc[0]
 
+# f0=geom['cf']*(2*np.pi*myrotorcraftlog['meas_v0'])**2
 
+# plt.plot(time3, f0)
+#the above 3 lines are not working, geom is not being imported 
+# to use cf clearly and it is not recognizing the variable meas_v0 
+# for the first rotor
 
-# plt.show()
+plt.show()
