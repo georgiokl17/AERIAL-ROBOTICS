@@ -2,7 +2,7 @@
 import genomix
 import os
 import time
-
+#this is my comment ~georgio
 # this connects to components running on the same host (localhost)
 g = genomix.connect()
 # to instead control components running on the remote computer "hostname" use
