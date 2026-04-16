@@ -147,7 +147,7 @@ def start():
   rotorcraft.start()
   rotorcraft.servo(ack=True) # this runs until stopped or input error
 
-  nhfc.log('/tmp/nhfc.log')
+  nhfc.log('../logs/01_Quadrotor/nhfc.log') #added nhfc log to get errors
   nhfc.set_current_position() # hover on current position
   move()
 
