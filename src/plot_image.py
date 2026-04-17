@@ -138,21 +138,30 @@ myrotolog = pd.read_csv(
     comment='#'
 )
 
-time3 = myrotolog['ts']-myrotolog['ts'].iloc[0]
-time3_ = time3.iloc[:305]
+# Replacing the NaN of ts
+time3 = myrotolog['ts'].fillna(0)
+time3 = time3-myrotolog['ts'].iloc[0]
+
 cf =0.00064 # From SDF file of quadrotor
 
-#Computation of velocities in rad/s
-omega0 = myrotolog['meas_v0']*3*np.pi
-omega1 = myrotolog['meas_v1']*3*np.pi
-omega2 = myrotolog['meas_v2']*3*np.pi
-omega3 = myrotolog['meas_v3']*3*np.pi
+# Replacing the NaN of meas_v
+omega0 = myrotolog['meas_v0'].fillna(0)
+omega1 = myrotolog['meas_v1'].fillna(0)
+omega2 = myrotolog['meas_v2'].fillna(0)
+omega3 = myrotolog['meas_v3'].fillna(0)
+
+# Computation of velocities in rad/s
+omega0 = omega0*2*np.pi
+omega1 = omega1*2*np.pi
+omega2 = omega1*2*np.pi
+omega3 = omega3*2*np.pi
 
 #Computation of forces
 force1 = cf*omega0**2 
 force2 = cf*omega1**2
 force3 = cf*omega2**2
 force4 = cf*omega3**2
+
 
 # print(force1.describe())
 # print(" ")
@@ -175,21 +184,33 @@ force4 = cf*omega3**2
 # plt.grid(True)
 
 
-# fig, ax = plt.subplots()
-# ax.plot(time3_, force1.iloc[:305], color='red', label='Force 1')
-# ax.plot(time3_, force2.iloc[:305], color='green', label='Force 2')
-# ax.plot(time3_, force3.iloc[:305], color='blue', label='Force 3')
-# ax.plot(time3_, force4.iloc[:305], color='orange', label='Force 4')
-
+fig, ax = plt.subplots(2,2)
+ax[0,0].plot(time3, force1, color='red', label='Force 1')
+ax[0,0].set_xlabel('time')
+ax[0,0].legend()
+ax[0,0].grid()
+ax[0,1].plot(time3, force2, color='green', label='Force 2')
+ax[0,1].set_xlabel('time')
+ax[0,1].legend()
+ax[0,1].grid()
+ax[1,0].plot(time3, force3, color='blue', label='Force 3')
+ax[1,0].set_xlabel('time')
+ax[1,0].legend()
+ax[1,0].grid()
+ax[1,1].plot(time3, force4, color='orange', label='Force 4')
+ax[1,1].set_xlabel('time')
+ax[1,1].legend()
+ax[1,1].grid()
 
 #TEST
-print(myrotolog['cmd_v0'])
-print(myrotolog['meas_v1'].iloc[:305])
-print(myrotolog['meas_v2'].iloc[:305])
-print(myrotolog['meas_v3'].iloc[:305])
-print(myrotolog['meas_v4'].iloc[:305])
-print(myrotolog['meas_v5'].iloc[:305])
-print(myrotolog['meas_v6'].iloc[:305])
-print(myrotolog['meas_v7'].iloc[:305])
+print(omega0)
+# print(myrotolog['cmd_v0'])
+# print(myrotolog['meas_v1'].iloc[:305])
+# print(myrotolog['meas_v2'].iloc[:305])
+# print(myrotolog['meas_v3'].iloc[:305])
+# print(myrotolog['meas_v4'].iloc[:305])
+# print(myrotolog['meas_v5'].iloc[:305])
+# print(myrotolog['meas_v6'].iloc[:305])
+# print(myrotolog['meas_v7'].iloc[:305])
 
 plt.show()
