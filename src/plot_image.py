@@ -112,21 +112,57 @@ ax[1,1].set_xlabel('time')
 ax[1,1].legend()
 ax[1,1].grid()
 
-#for forces
-myrotorcraftlog = pd.read_csv(
-    '../logs/01_Quadrotor/nhfc.log',
+# For forces
+myrotolog = pd.read_csv(
+    '../logs/01_Quadrotor/rotorcraft.log',
     delimiter=r'\s+',
     engine='python',
     na_values=['-', 'nan'],
     comment='#'
 )
-# time3 = myrotorcraftlog['ts']-mylog['ts'].iloc[0]
 
-# f0=geom['cf']*(2*np.pi*myrotorcraftlog['meas_v0'])**2
+# Replacing the NaN of ts
+time3 = myrotolog['ts'].fillna(0)
+time3 = time3-myrotolog['ts'].iloc[0]
 
-# plt.plot(time3, f0)
-#the above 3 lines are not working, geom is not being imported 
-# to use cf clearly and it is not recognizing the variable meas_v0 
-# for the first rotor
+cf =0.00064 # From SDF file of quadrotor
+
+# Replacing the NaN of meas_v
+omega0 = myrotolog['meas_v0'].fillna(0)
+omega1 = myrotolog['meas_v1'].fillna(0)
+omega2 = myrotolog['meas_v2'].fillna(0)
+omega3 = myrotolog['meas_v3'].fillna(0)
+
+# Computation of velocities in rad/s
+omega0 = omega0*2*np.pi
+omega1 = omega1*2*np.pi
+omega2 = omega1*2*np.pi
+omega3 = omega3*2*np.pi
+
+# Computation of forces
+force1 = cf*omega0**2 
+force2 = cf*omega1**2
+force3 = cf*omega2**2
+force4 = cf*omega3**2
+
+
+# Forces plotting
+fig, ax = plt.subplots(2,2)
+ax[0,0].plot(time3, force1, color='red', label='Force 1')
+ax[0,0].set_xlabel('time')
+ax[0,0].legend()
+ax[0,0].grid()
+ax[0,1].plot(time3, force2, color='green', label='Force 2')
+ax[0,1].set_xlabel('time')
+ax[0,1].legend()
+ax[0,1].grid()
+ax[1,0].plot(time3, force3, color='blue', label='Force 3')
+ax[1,0].set_xlabel('time')
+ax[1,0].legend()
+ax[1,0].grid()
+ax[1,1].plot(time3, force4, color='orange', label='Force 4')
+ax[1,1].set_xlabel('time')
+ax[1,1].legend()
+ax[1,1].grid()
 
 plt.show()
