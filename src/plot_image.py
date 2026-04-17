@@ -113,13 +113,13 @@ ax[1,1].legend()
 ax[1,1].grid()
 
 #for forces
-myrotorcraftlog = pd.read_csv(
-    '../logs/01_Quadrotor/nhfc.log',
-    delimiter=r'\s+',
-    engine='python',
-    na_values=['-', 'nan'],
-    comment='#'
-)
+#myrotorcraftlog = pd.read_csv(
+ #   '../logs/01_Quadrotor/nhfc.log',
+ #   delimiter=r'\s+',
+  #  engine='python',
+ #   na_values=['-', 'nan'],
+ #   comment='#'
+#)
 # time3 = myrotorcraftlog['ts']-mylog['ts'].iloc[0]
 
 # f0=geom['cf']*(2*np.pi*myrotorcraftlog['meas_v0'])**2
@@ -128,5 +128,39 @@ myrotorcraftlog = pd.read_csv(
 #the above 3 lines are not working, geom is not being imported 
 # to use cf clearly and it is not recognizing the variable meas_v0 
 # for the first rotor
+
+myrotolog = pd.read_csv(
+    '../logs/01_Quadrotor/rotorcraft.log',
+    delimiter=r'\s+',
+    engine='python',
+    na_values=['-', 'nan'],
+    comment='#'
+)
+
+time3 = myrotolog['ts']-myrotolog['ts'].iloc[0]
+
+cf =0.00064 # From SDF file of quadrotor
+
+#Computation of velocities in rad/s
+omega0 = myrotolog['meas_v0']*3*np.pi
+omega1 = myrotolog['meas_v1']*3*np.pi
+omega2 = myrotolog['meas_v2']*3*np.pi
+omega3 = myrotolog['meas_v3']*3*np.pi
+
+#Computation of forces
+force1 = cf*omega0**2 
+force2 = cf*omega1**2
+force3 = cf*omega2**2
+force4 = cf*omega3**2
+
+plt.figure()
+plt.plot(time3, force1,  color='red', label='force1')
+plt.plot(time3, force2,  color='green', label='force2')
+plt.plot(time3, force3,  color='blue', label='force3')
+plt.plot(time3, force4,  color='yellow', label='force4')
+plt.xlabel('Tempo [s]')
+plt.ylabel('Forza [N]')
+plt.legend()
+plt.grid(True)
 
 plt.show()
