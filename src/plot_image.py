@@ -112,24 +112,7 @@ ax[1,1].set_xlabel('time')
 ax[1,1].legend()
 ax[1,1].grid()
 
-
-#for forces
-#myrotorcraftlog = pd.read_csv(
- #   '../logs/01_Quadrotor/nhfc.log',
- #   delimiter=r'\s+',
-  #  engine='python',
- #   na_values=['-', 'nan'],
- #   comment='#'
-#)
-# time3 = myrotorcraftlog['ts']-mylog['ts'].iloc[0]
-
-# f0=geom['cf']*(2*np.pi*myrotorcraftlog['meas_v0'])**2
-
-# plt.plot(time3, f0)
-#the above 3 lines are not working, geom is not being imported 
-# to use cf clearly and it is not recognizing the variable meas_v0 
-# for the first rotor
-
+# For forces
 myrotolog = pd.read_csv(
     '../logs/01_Quadrotor/rotorcraft.log',
     delimiter=r'\s+',
@@ -156,34 +139,14 @@ omega1 = omega1*2*np.pi
 omega2 = omega1*2*np.pi
 omega3 = omega3*2*np.pi
 
-#Computation of forces
+# Computation of forces
 force1 = cf*omega0**2 
 force2 = cf*omega1**2
 force3 = cf*omega2**2
 force4 = cf*omega3**2
 
 
-# print(force1.describe())
-# print(" ")
-# print(force2.describe())
-# print(" ")
-# print(force3.describe())
-# print(" ")
-# print(force4.describe())
-# print(" ")
-# print(time3.describe())
-
-# plt.figure()
-# plt.plot(time3, force1,  color='red', label='force1')
-# #plt.plot(time3, force2,  color='green', label='force2')
-# #plt.plot(time3, force3,  color='blue', label='force3')
-# #plt.plot(time3, force4,  color='yellow', label='force4')
-# plt.xlabel('Time [s]')
-# plt.ylabel('Force [N]')
-# plt.legend()
-# plt.grid(True)
-
-
+# Forces plotting
 fig, ax = plt.subplots(2,2)
 ax[0,0].plot(time3, force1, color='red', label='Force 1')
 ax[0,0].set_xlabel('time')
@@ -201,16 +164,5 @@ ax[1,1].plot(time3, force4, color='orange', label='Force 4')
 ax[1,1].set_xlabel('time')
 ax[1,1].legend()
 ax[1,1].grid()
-
-#TEST
-print(omega0)
-# print(myrotolog['cmd_v0'])
-# print(myrotolog['meas_v1'].iloc[:305])
-# print(myrotolog['meas_v2'].iloc[:305])
-# print(myrotolog['meas_v3'].iloc[:305])
-# print(myrotolog['meas_v4'].iloc[:305])
-# print(myrotolog['meas_v5'].iloc[:305])
-# print(myrotolog['meas_v6'].iloc[:305])
-# print(myrotolog['meas_v7'].iloc[:305])
 
 plt.show()
