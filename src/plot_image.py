@@ -112,6 +112,7 @@ ax[1,1].set_xlabel('time')
 ax[1,1].legend()
 ax[1,1].grid()
 
+
 #for forces
 #myrotorcraftlog = pd.read_csv(
  #   '../logs/01_Quadrotor/nhfc.log',
@@ -138,7 +139,7 @@ myrotolog = pd.read_csv(
 )
 
 time3 = myrotolog['ts']-myrotolog['ts'].iloc[0]
-
+time3_ = time3.iloc[:305]
 cf =0.00064 # From SDF file of quadrotor
 
 #Computation of velocities in rad/s
@@ -153,14 +154,42 @@ force2 = cf*omega1**2
 force3 = cf*omega2**2
 force4 = cf*omega3**2
 
-plt.figure()
-plt.plot(time3, force1,  color='red', label='force1')
-plt.plot(time3, force2,  color='green', label='force2')
-plt.plot(time3, force3,  color='blue', label='force3')
-plt.plot(time3, force4,  color='yellow', label='force4')
-plt.xlabel('Tempo [s]')
-plt.ylabel('Forza [N]')
-plt.legend()
-plt.grid(True)
+# print(force1.describe())
+# print(" ")
+# print(force2.describe())
+# print(" ")
+# print(force3.describe())
+# print(" ")
+# print(force4.describe())
+# print(" ")
+# print(time3.describe())
+
+# plt.figure()
+# plt.plot(time3, force1,  color='red', label='force1')
+# #plt.plot(time3, force2,  color='green', label='force2')
+# #plt.plot(time3, force3,  color='blue', label='force3')
+# #plt.plot(time3, force4,  color='yellow', label='force4')
+# plt.xlabel('Time [s]')
+# plt.ylabel('Force [N]')
+# plt.legend()
+# plt.grid(True)
+
+
+# fig, ax = plt.subplots()
+# ax.plot(time3_, force1.iloc[:305], color='red', label='Force 1')
+# ax.plot(time3_, force2.iloc[:305], color='green', label='Force 2')
+# ax.plot(time3_, force3.iloc[:305], color='blue', label='Force 3')
+# ax.plot(time3_, force4.iloc[:305], color='orange', label='Force 4')
+
+
+#TEST
+print(myrotolog['cmd_v0'])
+print(myrotolog['meas_v1'].iloc[:305])
+print(myrotolog['meas_v2'].iloc[:305])
+print(myrotolog['meas_v3'].iloc[:305])
+print(myrotolog['meas_v4'].iloc[:305])
+print(myrotolog['meas_v5'].iloc[:305])
+print(myrotolog['meas_v6'].iloc[:305])
+print(myrotolog['meas_v7'].iloc[:305])
 
 plt.show()
