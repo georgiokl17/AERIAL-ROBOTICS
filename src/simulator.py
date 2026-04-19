@@ -2,18 +2,9 @@
 import os
 import time
 import numpy as np
-#this is my comment ~georgio
-# this connects to components running on the same host (localhost)
-# to instead control components running on the remote computer "hostname" use
-# g = genomix.connect('hostname')
-
-# adapt path to your setup
-
-# load components clients
-# --- setup ----------------------------------------------------------------
-#
+ 
 # defining parameters
-deltaT=1e-3
+deltaT=1e-3 #time 
 m=1.28
 ixx=0.015
 iyy=0.015
@@ -21,23 +12,47 @@ izz=0.007
 cf=6.5e-4
 ct=1e-5
 g=9.81
-G=np.array([[1,0,0,0,0,0],
+G=np.array([[1,0,0,0,0,0], #assuming rotation will stay the same since it is only a translational simulation for now
             [0,1,0,0,0,0],
             [0,0,1,0,0,0],
             [0,0,0,1,0,0],
             [0,0,0,0,1,0],
             [0,0,0,0,0,1]])
+L=0.125 #distance of rotor from center of mass of drone
 
 
-
-
+# --- setup ----------------------------------------------------------------
+#
 
 def setup():
-  wtvr=[]
+  x0=np.array([0,0,0, #position
+               1,0,0,0, #rotation quaternon that needs to be unitary
+               0,0,0, #linear velocity
+               0,0,0]) #angular velocity
 
-
-
-
+  v=np.array([0,0,1]) #orientation of underactuated quadorotor motor
+  w_u1=0 #for only weight
+  u_lambda1=m*g/(4*cf) #input for weight
+  w_u2=0 #for weight + 1N
+  u_lambda2=(m*g+1)/(4*cf) #input for weight+1N 
+  #calculating point p
+  for j in range(1,4):
+    p=np.array([[L,0,0],
+                [0,L,0],
+                [-L,0,0],
+                [0,-L,0]]) 
+  #calculating wrenches
+  for i in range(1, 5):
+    f_u1= cf*v*u_lambda1
+    tau_u1= ct*v*u_lambda1+np.cross(p[i-1],cf*v*u_lambda1) if i%2==0 else -ct*v*u_lambda1+np.cross(p[i-1],cf*v*u_lambda1)
+    w_i_1 = np.hstack((f_u1, tau_u1))
+    w_u1=w_u1+w_i_1
+    f_u2= cf*v*u_lambda2
+    tau_u2= ct*v*u_lambda2+np.cross(p[i-1],cf*v*u_lambda2) if i%2==0 else -ct*v*u_lambda2+np.cross(p[i-1],cf*v*u_lambda2)
+    w_i_2 = np.hstack((f_u2, tau_u2))
+    w_u2=w_u2+w_i_2
+    
+  
 
 
 # Function that make the quadrotor follow the given trajectory
