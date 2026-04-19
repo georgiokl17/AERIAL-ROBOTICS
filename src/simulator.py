@@ -1,6 +1,7 @@
 #
 import os
 import time
+import numpy as np
 #this is my comment ~georgio
 # this connects to components running on the same host (localhost)
 # to instead control components running on the remote computer "hostname" use
@@ -11,7 +12,26 @@ import time
 # load components clients
 # --- setup ----------------------------------------------------------------
 #
-# configure components, to be called interactively
+# defining parameters
+deltaT=1e-3
+m=1.28
+ixx=0.015
+iyy=0.015
+izz=0.007
+cf=6.5e-4
+ct=1e-5
+g=9.81
+G=np.array([[1,0,0,0,0,0],
+            [0,1,0,0,0,0],
+            [0,0,1,0,0,0],
+            [0,0,0,1,0,0],
+            [0,0,0,0,1,0],
+            [0,0,0,0,0,1]])
+
+
+
+
+
 def setup():
   wtvr=[]
 
