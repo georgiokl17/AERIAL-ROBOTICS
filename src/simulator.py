@@ -24,25 +24,25 @@ L=0.125 #distance of rotor from center of mass of drone
 # --- setup ----------------------------------------------------------------
 #
 
-def setup():
-  x0=np.array([0,0,0, #position
-               1,0,0,0, #rotation quaternon that needs to be unitary
-               0,0,0, #linear velocity
-               0,0,0]) #angular velocity
 
-  v=np.array([0,0,1]) #orientation of underactuated quadorotor motor
-  w_u1=0 #for only weight
-  u_lambda1=m*g/(4*cf) #input for weight
-  w_u2=0 #for weight + 1N
-  u_lambda2=(m*g+1)/(4*cf) #input for weight+1N 
-  #calculating point p
-  for j in range(1,4):
+x0=np.array([0,0,0, #position
+            1,0,0,0, #rotation quaternon that needs to be unitary
+            0,0,0, #linear velocity
+            0,0,0]) #angular velocity
+
+v=np.array([0,0,1]) #orientation of underactuated quadorotor motor
+w_u1=0 #for only weight
+u_lambda1=m*g/(4*cf) #input for weight
+w_u2=0 #for weight + 1N
+u_lambda2=(m*g+1)/(4*cf) #input for weight+1N 
+#calculating point p
+for j in range(1,4):
     p=np.array([[L,0,0],
                 [0,L,0],
                 [-L,0,0],
                 [0,-L,0]]) 
-  #calculating wrenches
-  for i in range(1, 5):
+#calculating wrenches
+for i in range(1, 5):
     f_u1= cf*v*u_lambda1
     tau_u1= ct*v*u_lambda1+np.cross(p[i-1],cf*v*u_lambda1) if i%2==0 else -ct*v*u_lambda1+np.cross(p[i-1],cf*v*u_lambda1)
     w_i_1 = np.hstack((f_u1, tau_u1))
@@ -56,8 +56,32 @@ def setup():
 
 
 # Function that make the quadrotor follow the given trajectory
-def move():
-    
+def dynamics():
+  x=x0  
+  
+  while True:
+    cmd = input("write stop to end: ")
+    if cmd == "stop":
+        break
+    else:
+       pos=x[0:3]
+       orient=x[3:7]
+       vel=x[7:10]
+       om=x[10:13]
+
+       A1=np.array([[1/m,0,0,0,0,0],
+                   [0,1/m,0,0,0,0],
+                   [0,0,1/m,0,0,0],
+                   [0,0,0,1/ixx,0,0],
+                   [0,0,0,0,1/iyy,0],
+                   [0,0,0,0,0,1/izz]])
+       sp=np.cross(om,(j@om))
+       B1=np.array(-[0,0,pos[2],sp[0],sp[1],sp[2]])+G@w_i_1
+       fdot1=A1@B1
+       
+
+      
+
     
 
 # --- start ----------------------------------------------------------------
