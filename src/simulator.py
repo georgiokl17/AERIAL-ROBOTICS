@@ -2,13 +2,16 @@
 import os
 import time
 import numpy as np
- 
+import matplotlib.pyplot as plt
 # defining parameters
 deltaT=1e-3 #time 
-m=1.28
-ixx=0.015
+m=1.28 #mass
+ixx=0.015 
 iyy=0.015
 izz=0.007
+J=np.array([[ixx,0,0], #inertia matrix
+            [0,iyy,0],
+            [0,0,izz]])
 cf=6.5e-4
 ct=1e-5
 g=9.81
@@ -18,8 +21,8 @@ G=np.array([[1,0,0,0,0,0], #assuming rotation will stay the same since it is onl
             [0,0,0,1,0,0],
             [0,0,0,0,1,0],
             [0,0,0,0,0,1]])
-w_R_b=G[0:3,0:3]
-
+w_R_b=G[0:3,0:3] #rotation matrix
+T_end=50 #end simulation time
 L=0.125 #distance of rotor from center of mass of drone
 
 
@@ -85,64 +88,54 @@ def unit_quaternon(a):
 
    
 # Function that make the quadrotor follow the given trajectory
-def dynamics():
-  x=x0  
-  
-  while True:
-    cmd = input("write stop to end: ")
-    if cmd == "stop":
-        break
-    else:
-       pos=x[0:3]
-       orient=x[3:7]
-       vel=x[7:10]
-       om=x[10:13]
-       om_W=w_R_b@om
-    
-       A1=np.array([[1/m,0,0,0,0,0],
-                   [0,1/m,0,0,0,0],
-                   [0,0,1/m,0,0,0],
-                   [0,0,0,1/ixx,0,0],
-                   [0,0,0,0,1/iyy,0],
-                   [0,0,0,0,0,1/izz]])
-       sp=np.cross(om,(j@om))
-       B1=np.array(-[0,0,pos[2],sp[0],sp[1],sp[2]])+G@w_i_1
-       fdot1=A1@B1
+def dynamics(x0,w):
+  x=x0 #initializing state
+  current_time=0 #time counter
+  t=[current_time]  
+  pos_x=[0] #x y and z position, we need to add more but for now just for testing its good enough
+  pos_y=[0]
+  pos_z=[0]
+  #defining our function
+  def f(x,w):
+    pos=x[0:3] #position
+    orient=x[3:7] #quaternon orientation
+    vel=x[7:10] #linear velocity
+    om=x[10:13] #angular velocity with respect to the drone
+    om_W=w_R_b@om #angular velocity with respect to the world
+    qomg_W=np.hstack((0, om_W)) #for quaternon multiplication for xdot
+    A=np.array([[1/m,0,0,0,0,0], 
+                [0,1/m,0,0,0,0],
+                [0,0,1/m,0,0,0],
+                [0,0,0,1/ixx,0,0],
+                [0,0,0,0,1/iyy,0],
+                [0,0,0,0,0,1/izz]])
+    sp=np.cross(om,(J@om)) #second half of vector
+    B=-np.array([0,0,pos[2],sp[0],sp[1],sp[2]])+G@w 
+    fdot=A@B #getting second half of xdot
+    orient_dot=0.5*quaternon_mult(qomg_W,orient) #quaternon mult
+    orient_dot_unit=unit_quaternon(orient_dot) #unit quaternon 
+    xdot=np.hstack((vel,orient_dot_unit,fdot)) #putting everyhting together
+    return xdot
+  while current_time < T_end:
+    k1=f(x,w)
+    k2=f(x+(deltaT/2)*k1,w)
+    k3=f(x+(deltaT/2)*k2,w)
+    k4=f(x+(deltaT/2)*k3,w) 
+    xnext=x+(deltaT/6)*(k1+k2*2+k3*2+k4) #rk4 integrator
+    q_orient=unit_quaternon(xnext[3:7]) #making sure quaternon is unitary
+    x=np.hstack((xnext[0:3],q_orient,xnext[7:10],xnext[10:13])) #getting xk+1
+    pos_x.append(xnext[0])
+    pos_y.append(xnext[1])
+    pos_z.append(xnext[2])
+    current_time=current_time+deltaT
+    t.append(current_time) #all these vectors for plotting
 
 
-      
+  fig,ax = plt.subplots(1,3) #plotting
+  ax[0].plot(t, pos_x, color='red', label='x_pos')
+  ax[1].plot(t, pos_y, color='green', label='y_pos')
+  ax[2].plot(t, pos_z, color='blue',label='z_pos')    
 
-    
+  plt.show()
 
-# --- start ----------------------------------------------------------------
-#
-# Spin the motors and servo on current position. To be called interactively
-# I have changed the folder to file path to save the log files
-# The below has been changed to save
-def start():
-  
-  move()
-
-
-
-# --- stop -----------------------------------------------------------------
-#
-# Stop motors. To be called interactively
-def stop():
-   
-
-
-## interactively, one can start the simulation with
-# setup()
-# start()
-## and then for instance set a desired position with
-# nhfc.set_position(0, 0, 1, 0)
-## to stop, use
-# stop
-
-
-def simulation():
-  setup()
-  start()
-  stop()
   
