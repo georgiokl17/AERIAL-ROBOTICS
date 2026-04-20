@@ -15,14 +15,14 @@ J=np.array([[ixx,0,0], #inertia matrix
 cf=6.5e-4
 ct=1e-5
 g=9.81
-G=np.array([[1,0,0,0,0,0], #assuming rotation will stay the same since it is only a translational simulation for now
-            [0,1,0,0,0,0],
+G=np.array([[1,0,0,0,0,0], #assuming rotation will stay the same since it is only 
+            [0,1,0,0,0,0], #a translational simulation for now
             [0,0,1,0,0,0],
             [0,0,0,1,0,0],
             [0,0,0,0,1,0],
             [0,0,0,0,0,1]])
 w_R_b=G[0:3,0:3] #rotation matrix
-T_end=50 #end simulation time
+T_end=15 #end simulation time
 L=0.125 #distance of rotor from center of mass of drone
 
 
@@ -39,13 +39,12 @@ v=np.array([0,0,1]) #orientation of underactuated quadorotor motor
 w_u1=0 #for only weight
 u_lambda1=m*g/(4*cf) #input for weight
 w_u2=0 #for weight + 1N
-u_lambda2=(m*g+1)/(4*cf) #input for weight+1N 
+u_lambda2=(m*g+10)/(4*cf) #input for weight+1N 
 #calculating point p
-for j in range(1,4):
-    p=np.array([[L,0,0],
-                [0,L,0],
-                [-L,0,0],
-                [0,-L,0]]) 
+p=np.array([[L,0,0],
+            [0,L,0],
+            [-L,0,0],
+            [0,-L,0]]) 
 #calculating wrenches
 for i in range(1, 5):
     f_u1= cf*v*u_lambda1 #force for weight
@@ -109,8 +108,8 @@ def dynamics(x0,w):
                 [0,0,0,1/ixx,0,0],
                 [0,0,0,0,1/iyy,0],
                 [0,0,0,0,0,1/izz]])
-    sp=np.cross(om,(J@om)) #second half of vector
-    B=-np.array([0,0,pos[2],sp[0],sp[1],sp[2]])+G@w 
+    sp=np.cross(om,(J@om)) #second part of vector
+    B=-np.array([0,0,m*g*pos[2],sp[0],sp[1],sp[2]])+G@w 
     fdot=A@B #getting second half of xdot
     orient_dot=0.5*quaternon_mult(qomg_W,orient) #quaternon mult
     orient_dot_unit=unit_quaternon(orient_dot) #unit quaternon 
@@ -120,7 +119,7 @@ def dynamics(x0,w):
     k1=f(x,w)
     k2=f(x+(deltaT/2)*k1,w)
     k3=f(x+(deltaT/2)*k2,w)
-    k4=f(x+(deltaT/2)*k3,w) 
+    k4=f(x+(deltaT)*k3,w) 
     xnext=x+(deltaT/6)*(k1+k2*2+k3*2+k4) #rk4 integrator
     q_orient=unit_quaternon(xnext[3:7]) #making sure quaternon is unitary
     x=np.hstack((xnext[0:3],q_orient,xnext[7:10],xnext[10:13])) #getting xk+1
