@@ -181,6 +181,24 @@ def unit_quaternon(a):
    q=np.array([w/norm,x/norm,y/norm,z/norm])
    return q
 
+def quaternion_to_rotation_matrix(q):
+    w=q[0] 
+    x=q[1] 
+    y=q[2] 
+    z = q[3]
+
+    # Normalize quaternion (important!)
+    norm = np.sqrt(w*w + x*x + y*y + z*z)
+    w, x, y, z = w/norm, x/norm, y/norm, z/norm
+
+    R = np.array([
+        [1 - 2*(y*y + z*z),     2*(x*y - z*w),     2*(x*z + y*w)],
+        [2*(x*y + z*w),     1 - 2*(x*x + z*z),     2*(y*z - x*w)],
+        [2*(x*z - y*w),         2*(y*z + x*w), 1 - 2*(x*x + y*y)]
+    ])
+
+    return R
+
 def f(x,w):
     pos=x[0:3] #position
     orient=x[3:7] #quaternon orientation
@@ -229,7 +247,10 @@ state_port = setup()
 #  INITIALIZE SIMULATION HERE
 # ############################
 
-x0 = 0
+x0 = np.array([0,0,0,
+               1,0,0,0,
+               0,0,0,
+               0,0,0])
 u0 = 0
 
 t0 = 0
@@ -299,8 +320,9 @@ for i, ts in enumerate(tt):
     # ################################
     #  UPDATE SIMULATION: make 1 step
     # ################################
-    x_dot=f(x)
-    x = integration(x,u,dt)
+    x_dot=f(x,wrenches)
+
+    x = integration(x,wrenches,dt)
     
 
     # save data
