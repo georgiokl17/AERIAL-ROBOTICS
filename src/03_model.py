@@ -29,6 +29,7 @@ import math
 import numpy as np
 import os
 import time
+import matplotlib.pyplot as plt
 
 # --- setup ----------------------------------------------------------------
 def setup():
@@ -181,11 +182,37 @@ def unit_quaternon(a):
    q=np.array([w/norm,x/norm,y/norm,z/norm])
    return q
 
+def quaternion_to_rotation_matrix(q):
+    w=q[0] 
+    x=q[1] 
+    y=q[2] 
+    z = q[3]
+
+    # Normalize quaternion (important!)
+    norm = np.sqrt(w*w + x*x + y*y + z*z)
+    w, x, y, z = w/norm, x/norm, y/norm, z/norm
+
+    R = np.array([
+        [1 - 2*(y*y + z*z),     2*(x*y - z*w),     2*(x*z + y*w)],
+        [2*(x*y + z*w),     1 - 2*(x*x + z*z),     2*(y*z - x*w)],
+        [2*(x*z - y*w),         2*(y*z + x*w), 1 - 2*(x*x + y*y)]
+    ])
+
+    return R
+
 def f(x,w):
     pos=x[0:3] #position
     orient=x[3:7] #quaternon orientation
     vel=x[7:10] #linear velocity
     om=x[10:13] #angular velocity with respect to the drone
+    R=quaternion_to_rotation_matrix(orient)
+    G=np.array([[R[0][0],R[0][1],R[0][2],0,0,0],
+                [R[1][0],R[1][1],R[1][2],0,0,0],
+                [R[2][0],R[2][1],R[2][2],0,0,0],
+                [0,0,0,1,0,0],
+                [0,0,0,0,1,0],
+                [0,0,0,0,0,1]
+                ])
     om_W=w_R_b@om #angular velocity with respect to the world
     qomg_W=np.hstack((0, om_W)) #for quaternon multiplication for xdot
     A=np.array([[1/m,0,0,0,0,0], 
@@ -229,8 +256,11 @@ state_port = setup()
 #  INITIALIZE SIMULATION HERE
 # ############################
 
-x0 = 0
-u0 = 0
+x = np.array([0,0,0,
+               1,0,0,0,
+               0,0,0,
+               0,0,0])
+u_lambda = np.array([0,0,0,0])
 
 t0 = 0
 tf = 10
@@ -268,8 +298,8 @@ F = np.array([[0,0,0,0],
 # more efficient than dynamic allocation
 N = math.ceil((tf-t0)/dt)
 tt = np.linspace(t0, tf, N)
-x_log = np.zeros((N, x0.shape[0]))
-u_log = np.zeros((N, u0.shape[0]))
+x_log = np.zeros((N, x.shape[0]))
+u_log = np.zeros((N, u.shape[0]))
 t_log = np.zeros(N) # (N,)
 tc_log = np.zeros(N) # (N,)
 
@@ -292,21 +322,22 @@ for i, ts in enumerate(tt):
         set_second_wp = False
 
     
-    u_lambda = np.square(rotor_speeds_from_nhfc())
-    wrenches = F@rotor_speeds_from_nhfc()
+    
+    wrenches = F@u_lambda
     t1 = get_time_now_ms()
 
     # ################################
     #  UPDATE SIMULATION: make 1 step
     # ################################
-    x_dot=f(x)
-    x = integration(x,u,dt)
+    x_dot=f(x,wrenches)
+
+    x = integration(x,wrenches,dt)
     
 
     # save data
     t_log[i] = ts
     x_log[i, :] = x.reshape(-1)
-    u_log[i, :] = u.reshape(-1)
+    u_log[i, :] = u_lambda.reshape(-1)
 
     # print simulation time but every 1k iterations
     if (int(ts/dt) % 1000) == 0:
@@ -322,8 +353,18 @@ for i, ts in enumerate(tt):
         print(f"delay of: {dt - elapsed_ms}ms")
 
     # update nhfc state
-    state = np.hstack((x, xdot[-6:])).reshape(-1)
+    state = np.hstack((x, x_dot[-6:])).reshape(-1)
     state_to_nhfc(state)
+
+    u_lambda = np.square(rotor_speeds_from_nhfc())
+    
+    
+fig,ax = plt.subplots(1,3) #plotting
+ax[0].plot(t_log, x_log[:,0], color='red', label='x_pos')
+ax[1].plot(t_log, x_log[:,1], color='green', label='y_pos')
+ax[2].plot(t_log, x_log[:,2], color='blue',label='z_pos')    
+
+plt.show()
 
 stop()
 
