@@ -36,6 +36,15 @@ def setup():
     # ###############################################
     #  PLACE HERE YOUR NECESSARY SETUP LINES OF CODE
     # ###############################################
+      #
+  # configure quadrotor geometry: 4 rotors, not tilted, 23cm arms
+    geom = {
+        'rotors': 4, 'cx': 0, 'cy': 0, 'cz': 0, 'armlen': 0.23, 'mass': 1.28,
+        'rx': 0, 'ry': 0, 'rz': -1, 'cf': 6.5e-4, 'ct': 1e-5
+    }
+
+    nhfc.set_gtmrp_geom(geom) #changed this only to have the cf as a variable we can use
+  
 
     my_state_port = nhfc.state('my_state')
 
@@ -250,7 +259,7 @@ nhfc = g.load('nhfc')
 
 state_port = setup()
 
-#input("start simulation?")
+input("start simulation?")
 
 # ############################
 #  INITIALIZE SIMULATION HERE
@@ -299,7 +308,7 @@ F = np.array([[0,0,0,0],
 N = math.ceil((tf-t0)/dt)
 tt = np.linspace(t0, tf, N)
 x_log = np.zeros((N, x.shape[0]))
-u_log = np.zeros((N, u.shape[0]))
+u_log = np.zeros((N, u_lambda.shape[0]))
 t_log = np.zeros(N) # (N,)
 tc_log = np.zeros(N) # (N,)
 
@@ -354,9 +363,9 @@ for i, ts in enumerate(tt):
 
     # update nhfc state
     state = np.hstack((x, x_dot[-6:])).reshape(-1)
-    state_to_nhfc(state)
+    state_to_nhfc(state_port,state)
 
-    u_lambda = np.square(rotor_speeds_from_nhfc())
+    u_lambda = np.square(rotor_speeds_from_nhfc(cf))
     
     
 fig,ax = plt.subplots(1,3) #plotting
