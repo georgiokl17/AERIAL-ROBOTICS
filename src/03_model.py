@@ -256,7 +256,12 @@ w_R_b=G[0:3,0:3] #rotation matrix
 T_end=15 #end simulation time
 L=0.125 #distance of rotor from center of mass of drone
 
-# F = np.array([[0,0,0,0],[0,0,0,0],[cf,cf,cf,cf],[0,cf*L,0,-cf*L],[-cf*L,0,cf*L,0],[ct,-ct,ct,-ct]])
+F = np.array([[0,0,0,0],
+              [0,0,0,0],
+              [cf,cf,cf,cf],
+              [0,cf*L,0,-cf*L],
+              [-cf*L,0,cf*L,0],
+              [ct,-ct,ct,-ct]])
 
      
 # preallocate arrays to store all simulation data
@@ -286,7 +291,9 @@ for i, ts in enumerate(tt):
         nhfc.set_position(0,0,0,0)
         set_second_wp = False
 
-    u = speed_to_thrust(rotor_speeds_from_nhfc(), cf)
+    
+    u_lambda = np.square(rotor_speeds_from_nhfc())
+    wrenches = F@rotor_speeds_from_nhfc()
     t1 = get_time_now_ms()
 
     # ################################
