@@ -109,11 +109,11 @@ def dynamics(x0,w):
                 [0,0,0,0,1/iyy,0],
                 [0,0,0,0,0,1/izz]])
     sp=np.cross(om,(J@om)) #second part of vector
-    B=-np.array([0,0,m*g*pos[2],sp[0],sp[1],sp[2]])+G@w 
+    B=-np.array([0,0,m*g,sp[0],sp[1],sp[2]])+G@w 
     fdot=A@B #getting second half of xdot
     orient_dot=0.5*quaternon_mult(qomg_W,orient) #quaternon mult
-    orient_dot_unit=unit_quaternon(orient_dot) #unit quaternon 
-    xdot=np.hstack((vel,orient_dot_unit,fdot)) #putting everyhting together
+   # orient_dot_unit=unit_quaternon(orient_dot) #unit quaternon 
+    xdot=np.hstack((vel,orient_dot,fdot)) #putting everyhting together
     return xdot
   while current_time < T_end:
     k1=f(x,w)
@@ -136,5 +136,5 @@ def dynamics(x0,w):
   ax[2].plot(t, pos_z, color='blue',label='z_pos')    
 
   plt.show()
-
-  
+print(w_u1)
+dynamics(x0,w_u2)
