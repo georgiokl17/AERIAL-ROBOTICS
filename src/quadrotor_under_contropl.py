@@ -66,7 +66,7 @@ def setup():
   nhfc.set_emerg({'emerg': {
     'descent': 0.1, 'dx': 0.5, 'dq': 1, 'dv': 3, 'dw': 3
   }})
-
+  
   # PID tuning
   nhfc.set_saturation({'sat': {'x': 1, 'v': 1, 'ix': 0}})
   nhfc.set_servo_gain({ 'gain': {
