@@ -341,6 +341,10 @@ for i, ts in enumerate(tt):
     x_dot=f(x,wrenches)
 
     x = integration(x,wrenches,dt)
+    if x[2]<0:
+        x[2]=0
+
+    
     
 
     # save data
