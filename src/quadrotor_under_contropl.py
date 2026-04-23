@@ -116,10 +116,6 @@ def setup():
   pom.add_measurement('mocap')
 
 
-
-
-
-
 # Function that make the quadrotor follow the given trajectory
 def move():
     time.sleep(2) 
