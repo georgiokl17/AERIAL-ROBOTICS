@@ -30,6 +30,7 @@ import numpy as np
 import os
 import time
 import matplotlib.pyplot as plt
+import math
 
 # --- setup ----------------------------------------------------------------
 def setup():
@@ -62,10 +63,11 @@ def setup():
 def start():
     #I have nhfc to set the current position
     #This is required for the maneuver component to know the initial state of the drone   
-    nhfc.set_current_position()
+    #nhfc.set_current_position()
     #I have also started the servo of the nhfc component to make sure it is ready to receive commands from the maneuver component
     nhfc.servo(ack=True)
-
+    
+    pass 
 # --- stop -----------------------------------------------------------------
 def stop():
     # ########################################
@@ -278,7 +280,7 @@ x = np.array([0,0,0,
 u_lambda = np.array([0,0,0,0])
 
 t0 = 0
-tf = 30
+tf = 45
 dt = 0.005
 
 m=1.28 #mass
@@ -326,23 +328,26 @@ time.sleep(0.1)
 
 set_first_wp = True
 set_second_wp = True
+set_third_wp = True
 
 for i, ts in enumerate(tt):
      #Instead of setting the position of the drone directly with nhfc,
      # I have used the maneuver component to set the desired trajectory for the drone and let the nhfc component follow it. 
      
     if set_first_wp and ts > 0.5:
-        maneuver.set_current_state()
-        
+        maneuver.set_current_state(ack=True)
         #maneuver.set_velocity_limit(v=0.3,w=0.2) #This can be used to limit the veloctities
         #maneuver.set_acceleration_limit(a=0.3,dw=0.2) #This can be used to limit the accelerations
-        maneuver.goto(x=1,y=1,z=1,yaw=0, duration=5)
-        set_first_wp = False
-        
+        maneuver.goto(x=1,y=1,z=1,yaw=0, duration=10, ack=True)
+        set_first_wp = False        
     elif set_second_wp and ts >= 15:
-        maneuver.set_current_state()
-        maneuver.goto(x=0,y=0,z=0,yaw=0, duration=5)
-        set_second_wp = False
+        maneuver.set_current_state(ack=True)
+        maneuver.goto(x=2,y=3,z=1,yaw=0, duration=10, ack=True)
+        set_second_wp = False        
+    elif set_third_wp and ts >= 30:
+        maneuver.set_current_state(ack=True)
+        maneuver.goto(x=0,y=0,z=0,yaw=0, duration=10, ack=True)
+        set_third_wp = False
     
     wrenches = F@u_lambda
     t1 = get_time_now_ms()
@@ -380,10 +385,11 @@ for i, ts in enumerate(tt):
     u_lambda = np.square(rotor_speeds_from_nhfc(cf))
     
     
-fig,ax = plt.subplots(1,3) #plotting
+fig,ax = plt.subplots(1,4) #plotting
 ax[0].plot(t_log, x_log[:,0], color='red', label='x_pos')
 ax[1].plot(t_log, x_log[:,1], color='green', label='y_pos')
 ax[2].plot(t_log, x_log[:,2], color='blue',label='z_pos')    
+ax[3].plot(t_log, x_log[:,5], color='yellow',label='Yaw')    
 
 plt.show()
 
