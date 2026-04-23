@@ -33,10 +33,7 @@ import matplotlib.pyplot as plt
 
 # --- setup ----------------------------------------------------------------
 def setup():
-    # ###############################################
-    #  PLACE HERE YOUR NECESSARY SETUP LINES OF CODE
-    # ###############################################
-      #
+
   # configure quadrotor geometry: 4 rotors, not tilted, 23cm arms
     geom = {
         'rotors': 4, 'cx': 0, 'cy': 0, 'cz': 0, 'armlen': 0.23, 'mass': 1.28,
@@ -45,21 +42,29 @@ def setup():
 
     nhfc.set_gtmrp_geom(geom) #changed this only to have the cf as a variable we can use
   
-
-    my_state_port = nhfc.state('my_state')
-
+    #Created a port my_state_man where maneuver component will receive the state of the drone from our simulator
+    my_state_port_maneuver = maneuver.state('my_state_man')
+    
+    # connect maneuver to state port which will be updated by our simulator
+    maneuver.connect_port({ 'local': 'state', 'remote': 'my_state_man' })
+    
+    my_state_port_nhfc = nhfc.state('my_state_nhfc')
+    
     # connect nhfc to state port which will be updated by our simulator
-    nhfc.connect_port({ 'local': 'state', 'remote': 'my_state' })
-
-    return my_state_port
+    nhfc.connect_port({ 'local': 'state', 'remote': 'my_state_nhfc' })
+    
+    # connect nhfc reference port to maneuver desired port, so that the maneuver component can send the desired trajectory to nhfc
+    nhfc.connect_port({'local':'reference','remote': 'maneuver/desired'})
+    
+    return  my_state_port_nhfc, my_state_port_maneuver
 
 # --- start ----------------------------------------------------------------
 def start():
-    # ########################################
-    #  FILL THIS FUNCTION, THEN REMOVE 'pass'
-    # ########################################
-    pass
-
+    #I have nhfc to set the current position
+    #This is required for the maneuver component to know the initial state of the drone   
+    nhfc.set_current_position()
+    #I have also started the servo of the nhfc component to make sure it is ready to receive commands from the maneuver component
+    nhfc.servo(ack=True)
 
 # --- stop -----------------------------------------------------------------
 def stop():
@@ -68,8 +73,10 @@ def stop():
     # ########################################
     pass
 
-# --- state_to_nhfc --------------------------------------------------------
-def state_to_nhfc(state_port, state: np.array):
+# --- state_to_system --------------------------------------------------------
+
+#Modified this from state_to_nhfc to be able to send the state of the drone to both nhfc and maneuver components
+def state_to_system(state_port, state: np.array):
     def _get_time():
         # returns a tuple of the type (<sec>,<nsec>)
         now = math.modf(time.clock_gettime(time.CLOCK_REALTIME))
@@ -256,8 +263,9 @@ g = genomix.connect()
 g.rpath(os.environ['HOME'] + '/openrobots/lib/genom/pocolibs/plugins')
 
 nhfc = g.load('nhfc')
+maneuver = g.load('maneuver')
 
-state_port = setup()
+state_port_nhfc, state_port_maneuver = setup()
 
 # ############################
 #  INITIALIZE SIMULATION HERE
@@ -270,8 +278,8 @@ x = np.array([0,0,0,
 u_lambda = np.array([0,0,0,0])
 
 t0 = 0
-tf = 20
-dt = 0.001
+tf = 30
+dt = 0.005
 
 m=1.28 #mass
 ixx=0.015 
@@ -300,7 +308,6 @@ F = np.array([[0,0,0,0],
               [-cf*L,0,cf*L,0],
               [ct,-ct,ct,-ct]])
 
-     
 # preallocate arrays to store all simulation data
 # more efficient than dynamic allocation
 N = math.ceil((tf-t0)/dt)
@@ -321,24 +328,29 @@ set_first_wp = True
 set_second_wp = True
 
 for i, ts in enumerate(tt):
-    if set_first_wp:
-        nhfc.set_position(1,1,1,0)
+     #Instead of setting the position of the drone directly with nhfc,
+     # I have used the maneuver component to set the desired trajectory for the drone and let the nhfc component follow it. 
+     
+    if set_first_wp and ts > 0.5:
+        maneuver.set_current_state()
+        
+        #maneuver.set_velocity_limit(v=0.3,w=0.2) #This can be used to limit the veloctities
+        #maneuver.set_acceleration_limit(a=0.3,dw=0.2) #This can be used to limit the accelerations
+        maneuver.goto(x=1,y=1,z=1,yaw=0, duration=5)
         set_first_wp = False
-    elif set_second_wp and ts >= 10:
-        nhfc.set_position(0,0,0,0)
+        
+    elif set_second_wp and ts >= 15:
+        maneuver.set_current_state()
+        maneuver.goto(x=0,y=0,z=0,yaw=0, duration=5)
         set_second_wp = False
-
-    
     
     wrenches = F@u_lambda
     t1 = get_time_now_ms()
 
-    # ################################
-    #  UPDATE SIMULATION: make 1 step
-    # ################################
     x_dot=f(x,wrenches)
 
     x = integration(x,wrenches,dt)
+    
     if x[2]<0:
         x[2]=0
 
@@ -360,9 +372,10 @@ for i, ts in enumerate(tt):
     elif elapsed_ms < 0:
         print(f"delay of: {dt - elapsed_ms}ms")
 
-    # update nhfc state
+    # update the state to both nhfc and maneuver components
     state = np.hstack((x, x_dot[-6:])).reshape(-1)
-    state_to_nhfc(state_port,state)
+    state_to_system(state_port_nhfc,state)
+    state_to_system(state_port_maneuver,state)    
 
     u_lambda = np.square(rotor_speeds_from_nhfc(cf))
     
@@ -375,8 +388,3 @@ ax[2].plot(t_log, x_log[:,2], color='blue',label='z_pos')
 plt.show()
 
 stop()
-
-# ############################################
-#  SAVE DATA TO DISK:
-#  generate log files as GenoM3 components do
-# ############################################
