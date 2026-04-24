@@ -337,7 +337,7 @@ set_third_wp = True
 for i, ts in enumerate(tt):
      #Instead of setting the position of the drone directly with nhfc,
      # I have used the maneuver component to set the desired trajectory for the drone and let the nhfc component follow it. 
-     
+    maneuver.set_bounds(xmin=0,xmax=5,ymin=0,ymax=5,zmin=0,zmax=5,yawmin=0,yawmax=0.5) #setting bounds for the maneuver component to make sure the drone does not go out of a certain area)
     if set_first_wp and ts > 0.1:
         maneuver.set_state(x=0,y=0,z=0,yaw=0) 
         maneuver.take_off(height=1, duration=5, send=True, ack=True) 
@@ -348,7 +348,7 @@ for i, ts in enumerate(tt):
     elif set_second_wp and ts >= 10:
         maneuver.set_current_state()
         # maneuver.waypoint(x=1.5,y=0.7,z=1.5,yaw=0.2,vx=0,vy=0,vz=0,wz=0,ax=0,ay=0,az=0,duration=10, send=True, ack=True)
-        maneuver.goto(x=1.5,y=0.7,z=1.5,yaw=0.2, duration=10, send=True, ack=True)
+        maneuver.goto(x=5,y=5,z=5,yaw=0.2, duration=10, send=True, ack=True)
         set_second_wp = False
     # elif set_third_wp and ts >= 20:
     #     maneuver.set_current_state()
