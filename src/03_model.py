@@ -295,7 +295,8 @@ G=np.array([[1,0,0,0,0,0], #assuming rotation will stay the same since it is onl
             [0,0,0,0,1,0],
             [0,0,0,0,0,1]])
 w_R_b=G[0:3,0:3] #rotation matrix
-L=1.25 #distance of rotor from center of mass of drone
+
+L=0.23 #distance of rotor from center of mass of drone
 
 F = np.array([[0,0,0,0],
               [0,0,0,0],
@@ -304,7 +305,6 @@ F = np.array([[0,0,0,0],
               [-cf*L,0,cf*L,0],
               [ct,-ct,ct,-ct]])
 
-     
 # preallocate arrays to store all simulation data
 # more efficient than dynamic allocation
 N = math.ceil((tf-t0)/dt)
@@ -319,8 +319,6 @@ start()
 
 # give it some time
 time.sleep(0.1)
-
-#What does WP mean here?
 
 set_first_wp = True
 set_second_wp = True

@@ -206,10 +206,6 @@ def quaternion_to_rotation_matrix(q):
     y=q[2] 
     z = q[3]
 
-    # Normalize quaternion (important!)
-    norm = np.sqrt(w*w + x*x + y*y + z*z)
-    w, x, y, z = w/norm, x/norm, y/norm, z/norm
-
     R = np.array([
         [1 - 2*(y*y + z*z),     2*(x*y - z*w),     2*(x*z + y*w)],
         [2*(x*y + z*w),     1 - 2*(x*x + z*z),     2*(y*z - x*w)],
@@ -231,7 +227,8 @@ def f(x,w):
                 [0,0,0,0,1,0],
                 [0,0,0,0,0,1]
                 ])
-    om_W=w_R_b@om #angular velocity with respect to the world
+    
+    om_W=R@om #angular velocity with respect to the world
     qomg_W=np.hstack((0, om_W)) #for quaternon multiplication for xdot
     A=np.array([[1/m,0,0,0,0,0], 
                 [0,1/m,0,0,0,0],
@@ -239,6 +236,7 @@ def f(x,w):
                 [0,0,0,1/ixx,0,0],
                 [0,0,0,0,1/iyy,0],
                 [0,0,0,0,0,1/izz]])
+    
     sp=np.cross(om,(J@om)) #second part of vector
     B=-np.array([0,0,m*g,sp[0],sp[1],sp[2]])+G@w 
     fdot=A@B #getting second half of xdot
@@ -280,7 +278,7 @@ x = np.array([0,0,0,
 u_lambda = np.array([0,0,0,0])
 
 t0 = 0
-tf = 45
+tf = 60
 dt = 0.005
 
 m=1.28 #mass
@@ -301,7 +299,7 @@ G=np.array([[1,0,0,0,0,0], #assuming rotation will stay the same since it is onl
             [0,0,0,0,0,1]])
 w_R_b=G[0:3,0:3] #rotation matrix
 T_end=15 #end simulation time
-L=0.125 #distance of rotor from center of mass of drone
+L=0.23 #distance of rotor from center of mass of drone
 
 F = np.array([[0,0,0,0],
               [0,0,0,0],
@@ -329,25 +327,31 @@ time.sleep(0.1)
 set_first_wp = True
 set_second_wp = True
 set_third_wp = True
+set_fourth_wp = True
 
 for i, ts in enumerate(tt):
      #Instead of setting the position of the drone directly with nhfc,
      # I have used the maneuver component to set the desired trajectory for the drone and let the nhfc component follow it. 
      
-    if set_first_wp and ts > 0.5:
-        maneuver.set_current_state(ack=True)
+    if set_first_wp and ts > 0.1:
+        maneuver.set_state(x=0,y=0,z=0,yaw=0) 
         #maneuver.set_velocity_limit(v=0.3,w=0.2) #This can be used to limit the veloctities
         #maneuver.set_acceleration_limit(a=0.3,dw=0.2) #This can be used to limit the accelerations
-        maneuver.goto(x=1,y=1,z=1,yaw=0, duration=10, ack=True)
+        maneuver.goto(x=1,y=1,z=1,yaw=0, duration=7, send=True, ack=True)
         set_first_wp = False        
-    elif set_second_wp and ts >= 15:
-        maneuver.set_current_state(ack=True)
-        maneuver.goto(x=2,y=3,z=1,yaw=0, duration=10, ack=True)
-        set_second_wp = False        
-    elif set_third_wp and ts >= 30:
-        maneuver.set_current_state(ack=True)
-        maneuver.goto(x=0,y=0,z=0,yaw=0, duration=10, ack=True)
-        set_third_wp = False
+    elif set_second_wp and ts >= 10:
+        maneuver.set_current_state()
+        maneuver.goto(x=2,y=2,z=2,yaw=0, duration=15, send=True, ack=True)
+        set_second_wp = False
+    elif set_third_wp and ts >= 25:
+        maneuver.set_current_state()
+        maneuver.goto(x=0,y=0,z=0,yaw=0, duration=15, send=True, ack=True)
+        set_third_wp = False        
+    elif set_fourth_wp and ts >= 40:
+        maneuver.set_current_state()
+        maneuver.goto(x=0,y=0,z=0,yaw=0, duration=15, send=True, ack=True)
+        set_fourth_wp = False        
+
     
     wrenches = F@u_lambda
     t1 = get_time_now_ms()
