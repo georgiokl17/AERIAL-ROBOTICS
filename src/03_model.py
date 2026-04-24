@@ -329,7 +329,7 @@ for i, ts in enumerate(tt):
         nhfc.set_position(1,1,1,0)
         set_first_wp = False
     elif set_second_wp and ts >= 10:
-        nhfc.set_position(1,1,1,1.57)
+        nhfc.set_position(10,10,10,0.2)
         set_second_wp = False
     elif set_third_wp and ts >= 20:
         nhfc.set_position(0,0,0,0)
