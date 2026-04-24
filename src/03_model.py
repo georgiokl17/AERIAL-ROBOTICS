@@ -30,6 +30,7 @@ import numpy as np
 import os
 import time
 import matplotlib.pyplot as plt
+import math
 
 # --- setup ----------------------------------------------------------------
 def setup():
@@ -154,14 +155,9 @@ def rotor_speeds_from_nhfc(c_f, n_act=4):
             desired_speeds[i] = data["desired"][i]
     return desired_speeds
 
-# --- speed_to_thrust ------------------------------------------------------
-def speed_to_thrust(speed: np.array, c_f):
-    return np.square(speed) * c_f
-
 # --- get_time_now_ms ------------------------------------------------------
 def get_time_now_ms():
     return time.clock_gettime_ns(time.CLOCK_REALTIME)*1e-6 # return ms
-
 
 #defining hamilton mult for quaternons
 def quaternon_mult(a,b):
@@ -195,11 +191,7 @@ def quaternion_to_rotation_matrix(q):
     w=q[0] 
     x=q[1] 
     y=q[2] 
-    z = q[3]
-
-    # Normalize quaternion (important!)
-    norm = np.sqrt(w*w + x*x + y*y + z*z)
-    w, x, y, z = w/norm, x/norm, y/norm, z/norm
+    z=q[3]
 
     R = np.array([
         [1 - 2*(y*y + z*z),     2*(x*y - z*w),     2*(x*z + y*w)],
@@ -207,7 +199,20 @@ def quaternion_to_rotation_matrix(q):
         [2*(x*z - y*w),         2*(y*z + x*w), 1 - 2*(x*x + y*y)]
     ])
 
+    # R = np.array([
+    #     [2*(w*w+x*x)-1,     2*(x*y-w*z),         2*(x*z + y*w)],
+    #     [2*(x*y + z*w),     2*(w*w + y*y)-1,     2*(y*z - x*w)],
+    #     [2*(x*z - y*w),     2*(y*z + x*w),       2*(w*w + z*z)-1]
+    # ])
+    
     return R
+
+
+def get_yaw(w, x, y, z):
+    # Formula for Yaw (rotation around Z-axis)
+    t3 = +2.0 * (w * z + x * y)
+    t4 = +1.0 - 2.0 * (y * y + z * z)
+    return math.atan2(t3, t4)
 
 def f(x,w):
     pos=x[0:3] #position
@@ -222,7 +227,8 @@ def f(x,w):
                 [0,0,0,0,1,0],
                 [0,0,0,0,0,1]
                 ])
-    om_W=w_R_b@om #angular velocity with respect to the world
+    
+    om_W=R@om #angular velocity with respect to the world
     qomg_W=np.hstack((0, om_W)) #for quaternon multiplication for xdot
     A=np.array([[1/m,0,0,0,0,0], 
                 [0,1/m,0,0,0,0],
@@ -230,14 +236,13 @@ def f(x,w):
                 [0,0,0,1/ixx,0,0],
                 [0,0,0,0,1/iyy,0],
                 [0,0,0,0,0,1/izz]])
+    
     sp=np.cross(om,(J@om)) #second part of vector
     B=-np.array([0,0,m*g,sp[0],sp[1],sp[2]])+G@w 
     fdot=A@B #getting second half of xdot
     orient_dot=0.5*quaternon_mult(qomg_W,orient) #quaternon mult
-   # orient_dot_unit=unit_quaternon(orient_dot) #unit quaternon 
     xdot=np.hstack((vel,orient_dot,fdot)) #putting everyhting together
     return xdot
-
 
 def integration(x,w,deltaT):
     k1=f(x,w)
@@ -270,8 +275,8 @@ x = np.array([0,0,0,
 u_lambda = np.array([0,0,0,0])
 
 t0 = 0
-tf = 20
-dt = 0.001
+tf = 30
+dt = 0.005
 
 m=1.28 #mass
 ixx=0.015 
@@ -290,8 +295,8 @@ G=np.array([[1,0,0,0,0,0], #assuming rotation will stay the same since it is onl
             [0,0,0,0,1,0],
             [0,0,0,0,0,1]])
 w_R_b=G[0:3,0:3] #rotation matrix
-T_end=15 #end simulation time
-L=0.125 #distance of rotor from center of mass of drone
+
+L=0.23 #distance of rotor from center of mass of drone
 
 F = np.array([[0,0,0,0],
               [0,0,0,0],
@@ -300,12 +305,12 @@ F = np.array([[0,0,0,0],
               [-cf*L,0,cf*L,0],
               [ct,-ct,ct,-ct]])
 
-     
 # preallocate arrays to store all simulation data
 # more efficient than dynamic allocation
 N = math.ceil((tf-t0)/dt)
 tt = np.linspace(t0, tf, N)
 x_log = np.zeros((N, x.shape[0]))
+yaw_log = np.zeros(N)
 u_log = np.zeros((N, u_lambda.shape[0]))
 t_log = np.zeros(N) # (N,)
 tc_log = np.zeros(N) # (N,)
@@ -315,21 +320,21 @@ start()
 # give it some time
 time.sleep(0.1)
 
-#What does WP mean here?
-
 set_first_wp = True
 set_second_wp = True
+set_third_wp = True
 
 for i, ts in enumerate(tt):
-    if set_first_wp:
+    if set_first_wp and ts >= 0.1:
         nhfc.set_position(1,1,1,0)
         set_first_wp = False
     elif set_second_wp and ts >= 10:
-        nhfc.set_position(0,0,0,0)
+        nhfc.set_position(10,10,10,0.2)
         set_second_wp = False
+    elif set_third_wp and ts >= 20:
+        nhfc.set_position(0,0,0,0)
+        set_third_wp = False
 
-    
-    
     wrenches = F@u_lambda
     t1 = get_time_now_ms()
 
@@ -363,14 +368,15 @@ for i, ts in enumerate(tt):
     # update nhfc state
     state = np.hstack((x, x_dot[-6:])).reshape(-1)
     state_to_nhfc(state_port,state)
-
+    yaw_val = get_yaw(x[3],x[4],x[5],x[6])
+    yaw_log[i] = yaw_val
     u_lambda = np.square(rotor_speeds_from_nhfc(cf))
     
-    
-fig,ax = plt.subplots(1,3) #plotting
+fig,ax = plt.subplots(1,4) #plotting
 ax[0].plot(t_log, x_log[:,0], color='red', label='x_pos')
 ax[1].plot(t_log, x_log[:,1], color='green', label='y_pos')
-ax[2].plot(t_log, x_log[:,2], color='blue',label='z_pos')    
+ax[2].plot(t_log, x_log[:,2], color='blue',label='z_pos')  
+ax[3].plot(t_log, yaw_log, color='yellow',label='Yaw')    
 
 plt.show()
 

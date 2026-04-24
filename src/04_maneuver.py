@@ -30,6 +30,7 @@ import numpy as np
 import os
 import time
 import matplotlib.pyplot as plt
+import math
 
 # --- setup ----------------------------------------------------------------
 def setup():
@@ -62,10 +63,11 @@ def setup():
 def start():
     #I have nhfc to set the current position
     #This is required for the maneuver component to know the initial state of the drone   
-    nhfc.set_current_position()
+    #nhfc.set_current_position()
     #I have also started the servo of the nhfc component to make sure it is ready to receive commands from the maneuver component
     nhfc.servo(ack=True)
-
+    
+    pass 
 # --- stop -----------------------------------------------------------------
 def stop():
     # ########################################
@@ -204,10 +206,6 @@ def quaternion_to_rotation_matrix(q):
     y=q[2] 
     z = q[3]
 
-    # Normalize quaternion (important!)
-    norm = np.sqrt(w*w + x*x + y*y + z*z)
-    w, x, y, z = w/norm, x/norm, y/norm, z/norm
-
     R = np.array([
         [1 - 2*(y*y + z*z),     2*(x*y - z*w),     2*(x*z + y*w)],
         [2*(x*y + z*w),     1 - 2*(x*x + z*z),     2*(y*z - x*w)],
@@ -215,6 +213,12 @@ def quaternion_to_rotation_matrix(q):
     ])
 
     return R
+
+def get_yaw(w, x, y, z):
+    # Formula for Yaw (rotation around Z-axis)
+    t3 = +2.0 * (w * z + x * y)
+    t4 = +1.0 - 2.0 * (y * y + z * z)
+    return math.atan2(t3, t4)
 
 def f(x,w):
     pos=x[0:3] #position
@@ -229,7 +233,8 @@ def f(x,w):
                 [0,0,0,0,1,0],
                 [0,0,0,0,0,1]
                 ])
-    om_W=w_R_b@om #angular velocity with respect to the world
+    
+    om_W=R@om #angular velocity with respect to the world
     qomg_W=np.hstack((0, om_W)) #for quaternon multiplication for xdot
     A=np.array([[1/m,0,0,0,0,0], 
                 [0,1/m,0,0,0,0],
@@ -237,6 +242,7 @@ def f(x,w):
                 [0,0,0,1/ixx,0,0],
                 [0,0,0,0,1/iyy,0],
                 [0,0,0,0,0,1/izz]])
+    
     sp=np.cross(om,(J@om)) #second part of vector
     B=-np.array([0,0,m*g,sp[0],sp[1],sp[2]])+G@w 
     fdot=A@B #getting second half of xdot
@@ -279,7 +285,7 @@ u_lambda = np.array([0,0,0,0])
 
 t0 = 0
 tf = 30
-dt = 0.005
+dt = 0.1
 
 m=1.28 #mass
 ixx=0.015 
@@ -299,7 +305,7 @@ G=np.array([[1,0,0,0,0,0], #assuming rotation will stay the same since it is onl
             [0,0,0,0,0,1]])
 w_R_b=G[0:3,0:3] #rotation matrix
 T_end=15 #end simulation time
-L=0.125 #distance of rotor from center of mass of drone
+L=0.23 #distance of rotor from center of mass of drone
 
 F = np.array([[0,0,0,0],
               [0,0,0,0],
@@ -313,6 +319,7 @@ F = np.array([[0,0,0,0],
 N = math.ceil((tf-t0)/dt)
 tt = np.linspace(t0, tf, N)
 x_log = np.zeros((N, x.shape[0]))
+yaw_log = np.zeros(N)
 u_log = np.zeros((N, u_lambda.shape[0]))
 t_log = np.zeros(N) # (N,)
 tc_log = np.zeros(N) # (N,)
@@ -322,27 +329,35 @@ start()
 # give it some time
 time.sleep(0.1)
 
-#What does WP mean here?
-
 set_first_wp = True
 set_second_wp = True
+set_third_wp = True
+# set_fourth_wp = True
 
 for i, ts in enumerate(tt):
      #Instead of setting the position of the drone directly with nhfc,
      # I have used the maneuver component to set the desired trajectory for the drone and let the nhfc component follow it. 
-     
-    if set_first_wp and ts > 0.5:
-        maneuver.set_current_state()
-        
+    maneuver.set_bounds(xmin=0,xmax=5,ymin=0,ymax=5,zmin=0,zmax=5,yawmin=0,yawmax=0.5) #setting bounds for the maneuver component to make sure the drone does not go out of a certain area)
+    if set_first_wp and ts > 0.1:
+        maneuver.set_state(x=0,y=0,z=0,yaw=0) 
+        maneuver.take_off(height=1, duration=5, send=True, ack=True) 
         #maneuver.set_velocity_limit(v=0.3,w=0.2) #This can be used to limit the veloctities
         #maneuver.set_acceleration_limit(a=0.3,dw=0.2) #This can be used to limit the accelerations
-        maneuver.goto(x=1,y=1,z=1,yaw=0, duration=5)
-        set_first_wp = False
-        
-    elif set_second_wp and ts >= 15:
+        #maneuver.goto(x=1,y=1,z=1,yaw=0, duration=7, send=True, ack=True)
+        set_first_wp = False        
+    elif set_second_wp and ts >= 10:
         maneuver.set_current_state()
-        maneuver.goto(x=0,y=0,z=0,yaw=0, duration=5)
+        # maneuver.waypoint(x=1.5,y=0.7,z=1.5,yaw=0.2,vx=0,vy=0,vz=0,wz=0,ax=0,ay=0,az=0,duration=10, send=True, ack=True)
+        maneuver.goto(x=5,y=5,z=5,yaw=0.2, duration=10, send=True, ack=True)
         set_second_wp = False
+    # elif set_third_wp and ts >= 20:
+    #     maneuver.set_current_state()
+    #     maneuver.goto(x=0,y=0,z=0,yaw=0, duration=5, send=True, ack=True)
+    #     set_third_wp = False        
+    # elif set_fourth_wp and ts >= 40:
+    #     maneuver.set_current_state()
+    #     maneuver.goto(x=0,y=0,z=0,yaw=0, duration=15, send=True, ack=True)
+    #     set_fourth_wp = False        
     
     wrenches = F@u_lambda
     t1 = get_time_now_ms()
@@ -364,27 +379,37 @@ for i, ts in enumerate(tt):
         print(f"t: {ts}")
 
     # if necessary, wait to match dt
-    t2 = get_time_now_ms()
-    elapsed_ms = t2-t1
-    tc_log[i] = elapsed_ms
-    if elapsed_ms > 0:
-        time.sleep(elapsed_ms*1e-3)
-    elif elapsed_ms < 0:
-        print(f"delay of: {dt - elapsed_ms}ms")
+    
 
     # update the state to both nhfc and maneuver components
     state = np.hstack((x, x_dot[-6:])).reshape(-1)
     state_to_system(state_port_nhfc,state)
-    state_to_system(state_port_maneuver,state)    
+    state_to_system(state_port_maneuver,state)  
+    yaw_val = get_yaw(x[3],x[4],x[5],x[6])
+    yaw_log[i] = yaw_val  
 
     u_lambda = np.square(rotor_speeds_from_nhfc(cf))
     
+    t2 = get_time_now_ms()
+    elapsed_ms = t2-t1
+    tc_log[i] = elapsed_ms
+    sleep_time= dt - elapsed_ms*1e-3
+    # if elapsed_ms > 0:
+    time.sleep(sleep_time)
+    # elif elapsed_ms < 0:
+    print(f"delay of: {elapsed_ms}ms")
     
-fig,ax = plt.subplots(1,3) #plotting
+fig,ax = plt.subplots(1,4) #plotting
 ax[0].plot(t_log, x_log[:,0], color='red', label='x_pos')
 ax[1].plot(t_log, x_log[:,1], color='green', label='y_pos')
 ax[2].plot(t_log, x_log[:,2], color='blue',label='z_pos')    
-
+ax[3].plot(t_log, yaw_log, color='yellow',label='Yaw')      
+  
+ax[0].grid(True)
+ax[1].grid(True)
+ax[2].grid(True)
+ax[3].grid(True)
+print(f"the max y val is:{np.max(x_log[:,1])}")
 plt.show()
 
 stop()
