@@ -15,6 +15,8 @@ optitrack = g.load('optitrack')
 rotorcraft = g.load('rotorcraft')
 pom = g.load('pom')
 nhfc = g.load('nhfc')
+uavpos = g.load('uavpos')
+uavatt = g.load('uavatt')
 
 # --- setup ----------------------------------------------------------------
 #
@@ -31,7 +33,7 @@ def setup():
   # rotorcraft
   #
   # connect to the simulated quadrotor
-  rotorcraft.connect({'serial': '/tmp/pty-qr4', 'baud': 0})
+  rotorcraft.connect({'serial': '/tmp/pty-hr6', 'baud': 0})
 
   # get IMU at 1kHz and motor data at 20Hz
   rotorcraft.set_sensor_rate({'rate': {
@@ -48,44 +50,49 @@ def setup():
   rotorcraft.connect_port({
     'local': 'rotor_input', 'remote': 'nhfc/rotor_input'
   })
+  #Created a port my_state_man where maneuver component will receive the state of the drone from our simulator
+  my_state_port_maneuver = maneuver.state('my_state_man')
+   
+  # connect maneuver to state port which will be updated by our simulator
+  maneuver.connect_port({ 'local': 'state', 'remote': 'my_state_man' })
 
 
-  # nhfc
-  #
-  # configure quadrotor geometry: 4 rotors, not tilted, 23cm arms
-  geom = {
-    'rotors': 4, 'cx': 0, 'cy': 0, 'cz': 0, 'armlen': 0.23, 'mass': 1.28,
-    'rx': 0, 'ry': 0, 'rz': -1, 'cf': 6.5e-4, 'ct': 1e-5
-  }
+#   # nhfc
+#   #
+#   # configure quadrotor geometry: 4 rotors, not tilted, 23cm arms
+#   geom = {
+#     'rotors': 4, 'cx': 0, 'cy': 0, 'cz': 0, 'armlen': 0.23, 'mass': 1.28,
+#     'rx': 0, 'ry': 0, 'rz': -1, 'cf': 6.5e-4, 'ct': 1e-5
+#   }
 
-  nhfc.set_gtmrp_geom(geom) #changed this only to have the cf as a variable we can use
+#   nhfc.set_gtmrp_geom(geom) #changed this only to have the cf as a variable we can use
   
 
-  # emergency descent parameters
-  nhfc.set_emerg({'emerg': {
-    'descent': 0.1, 'dx': 0.5, 'dq': 1, 'dv': 3, 'dw': 3
-  }})
+#   # emergency descent parameters
+#   nhfc.set_emerg({'emerg': {
+#     'descent': 0.1, 'dx': 0.5, 'dq': 1, 'dv': 3, 'dw': 3
+#   }})
   
-  # PID tuning
-  nhfc.set_saturation({'sat': {'x': 1, 'v': 1, 'ix': 0}})
-  nhfc.set_servo_gain({ 'gain': {
-    'Kpxy': 5, 'Kpz': 5, 'Kqxy': 4, 'Kqz': 0.1,
-    'Kvxy': 6, 'Kvz': 6, 'Kwxy': 1, 'Kwz': 0.1,
-    'Kixy': 0, 'Kiz': 0
-  }})
+#   # PID tuning
+#   nhfc.set_saturation({'sat': {'x': 1, 'v': 1, 'ix': 0}})
+#   nhfc.set_servo_gain({ 'gain': {
+#     'Kpxy': 5, 'Kpz': 5, 'Kqxy': 4, 'Kqz': 0.1,
+#     'Kvxy': 6, 'Kvz': 6, 'Kwxy': 1, 'Kwz': 0.1,
+#     'Kixy': 0, 'Kiz': 0
+#   }})
 
-  # use tilt-prioritized controller
-  nhfc.set_control_mode({'att_mode': '::nhfc::tilt_prioritized'})
+#   # use tilt-prioritized controller
+#   nhfc.set_control_mode({'att_mode': '::nhfc::tilt_prioritized'})
 
-  # read measured propeller velocities from rotorcraft
-  nhfc.connect_port({
-    'local': 'rotor_measure', 'remote': 'rotorcraft/rotor_measure'
-  })
+#   # read measured propeller velocities from rotorcraft
+#   nhfc.connect_port({
+#     'local': 'rotor_measure', 'remote': 'rotorcraft/rotor_measure'
+#   })
 
-  # read current state from pom
-  nhfc.connect_port({
-    'local': 'state', 'remote': 'pom/frame/robot'
-  })
+#   # read current state from pom
+#   nhfc.connect_port({
+#     'local': 'state', 'remote': 'pom/frame/robot'
+#   })
 
 
   # pom
