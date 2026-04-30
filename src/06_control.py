@@ -56,6 +56,9 @@ def setup():
   # connect maneuver to state port which will be updated by our simulator
   maneuver.connect_port({ 'local': 'state', 'remote': 'pom/frame/robot'})
   
+ 
+
+ my_reference_port = uavpos.reference('my_reference')
   # connect ports for new components
   uavpos.connect_port({ 'local': 'state', 'remote': 'pom/frame/robot'})
   uavpos.connect_port({ 'local': 'reference', 'remote': 'manuever/desired'})
@@ -142,23 +145,167 @@ def setup():
   #optitrack.set_noise(0.05,0.05)
 
 
+def quaternion_to_euler(q):
+    """
+    Converts a quaternion [qx, qy, qz, qw] into roll, pitch, and yaw (in radians).
+    """
+    qx, qy, qz, qw = q
+
+    # Roll (x-axis rotation)
+    sinr_cosp = 2 * (qw * qx + qy * qz)
+    cosr_cosp = 1 - 2 * (qx * qx + qy * qy)
+    roll = math.atan2(sinr_cosp, cosr_cosp)
+
+    # Pitch (y-axis rotation)
+    sinp = 2 * (qw * qy - qz * qx)
+    if abs(sinp) >= 1:
+        pitch = math.copysign(math.pi / 2, sinp)  # Use 90 degrees if out of range
+    else:
+        pitch = math.asin(sinp)
+
+    # Yaw (z-axis rotation)
+    siny_cosp = 2 * (qw * qz + qx * qy)
+    cosy_cosp = 1 - 2 * (qy * qy + qz * qz)
+    yaw = math.atan2(siny_cosp, cosy_cosp)
+
+    return roll, pitch, yaw
+
+
+def taj_plan(x_current,x_desired,duration):
+
+    x_now=x_current[0]
+    y_now=x_current[1]
+    z_now=x_current[2]
+    yaw_now=x_current[3]
+
+    x_final=x_desired[0]
+    y_final=x_desired[1]
+    z_final=x_desired[2]
+    yaw_final=x_desired[3]
+
+    iteration = int(duration / dt)
+    
+    vx_now=0
+    vy_now=0
+    vz_now=0
+    vyaw_now=0
+
+    ax_now=0
+    ay_now=0
+    az_now=0
+    ayaw_now=0
+
+
+    vx_final=0
+    vy_final=0
+    vz_final=0
+    vyaw_final=0
+
+    ax_final=0
+    ay_final=0
+    az_final=0
+    ayaw_final=0
+
+
+    ct=0
+    nt=duration
+
+
+    A=np.array([[1, ct, ct**2, ct**3, ct**4, ct**5],       #for x y z yaw initial points
+                [0, 1, 2*ct, 3*ct**2, 4*ct**3, 5*ct**4],   #for xdot ydot ... initial points
+                [0, 0, 2, 2*3*ct, 3*4*ct**2, 4*5*ct**3],   #for xdouble dot ... initial points
+                [1, nt, nt**2, nt**3, nt**4, nt**5],        #for x y z yaw final points
+                [0, 1, 2*nt, 3*nt**2, 4*nt**3, 5*nt**4],    #for xdot ydot ... ifinal points
+                [0, 0, 2, 2*3*nt, 3*4*nt**2, 4*5*nt**3]])   #for xdouble dot ... final points
+        
+    Bx=np.array([x_now,vx_now,ax_now,x_final,vx_final, ax_final])
+    By=np.array([y_now,vy_now,ay_now,y_final,vy_final, ay_final])
+    Bz=np.array([z_now,vz_now,az_now,z_final,vz_final, az_final])
+    Byaw=np.array([yaw_now,vyaw_now,ayaw_now,yaw_final,vyaw_final, ayaw_final])
+
+    coeff_x = np.linalg.solve(A, Bx)
+    coeff_y = np.linalg.solve(A, By)
+    coeff_z = np.linalg.solve(A, Bz)
+    coeff_yaw = np.linalg.solve(A, Byaw)
+
+    state_ls=[]
+    
+
+    for i in range(iteration):
+
+        nt=i*dt
+        
+        
+        xt=coeff_x[0]+coeff_x[1]*nt+coeff_x[2]*nt**2+coeff_x[3]*nt**3+coeff_x[4]*nt**4 +coeff_x[5]*nt**5
+        yt=coeff_y[0]+coeff_y[1]*nt+coeff_y[2]*nt**2+coeff_y[3]*nt**3+coeff_y[4]*nt**4 +coeff_y[5]*nt**5
+        zt=coeff_z[0]+coeff_z[1]*nt+coeff_z[2]*nt**2+coeff_z[3]*nt**3+coeff_z[4]*nt**4 +coeff_z[5]*nt**5
+        yawt=coeff_yaw[0]+coeff_yaw[1]*nt+coeff_yaw[2]*nt**2+coeff_yaw[3]*nt**3+coeff_yaw[4]*nt**4 +coeff_yaw[5]*nt**5
+
+        vxt=coeff_x[1]+2*coeff_x[2]*nt+3*coeff_x[3]*nt**2+4*coeff_x[4]*nt**3 +5*coeff_x[5]*nt**4
+        vyt=coeff_y[1]+2*coeff_y[2]*nt+3*coeff_y[3]*nt**2+4*coeff_y[4]*nt**3 +5*coeff_y[5]*nt**4
+        vzt=coeff_z[1]+2*coeff_z[2]*nt+3*coeff_z[3]*nt**2+4*coeff_z[4]*nt**3 +5*coeff_z[5]*nt**4
+        vyawt=coeff_yaw[1]+2*coeff_yaw[2]*nt+3*coeff_yaw[3]*nt**2+4*coeff_yaw[4]*nt**3 +5*coeff_yaw[5]*nt**4
+
+        axt=2*coeff_x[2]+2*3*coeff_x[3]*nt+3*4*coeff_x[4]*nt**2 +4*5*coeff_x[5]*nt**3
+        ayt=2*coeff_y[2]+2*3*coeff_y[3]*nt+3*4*coeff_y[4]*nt**2 +4*5*coeff_y[5]*nt**3
+        azt=2*coeff_z[2]+2*3*coeff_z[3]*nt+3*4*coeff_z[4]*nt**2 +4*5*coeff_z[5]*nt**3
+        ayawt=2*coeff_yaw[2]+2*3*coeff_yaw[3]*nt+3*4*coeff_yaw[4]*nt**2 +4*5*coeff_yaw[5]*nt**3
+
+        qw = math.cos(yawt / 2)
+        qx = 0
+        qy = 0
+        qz = math.sin(yawt / 2)
+
+        xh=np.array([xt,yt,zt,  #state here in the function 
+           qw,qx,qy,qz,
+           vxt,vyt,vzt,
+           0,0,vyawt])
+        orient=np.array([qw,qx,qy,qz])
+        R=quaternion_to_rotation_matrix(orient)
+        om=np.array([0,0,yawt])
+        om_w=R@om
+        qomg_W=np.hstack((0, om_w))
+        orient_dot=0.5*quaternon_mult(qomg_W,orient)
+        xdot=np.array([vxt,vyt,vzt,                             #xdot defined based on results of function 
+                       orient_dot[0],orient_dot[1],orient_dot[2],orient_dot[3],
+                       axt,ayt,azt,
+                       0,0,ayawt])
+        state = np.hstack((xh, xdot[-6:])).reshape(-1)
+        state_ls.append(state)
+
+    
+
+        ct=nt
+
+    return state_ls
+
+
 
 # Function that make the quadrotor follow the given trajectory
 def move():
-    time.sleep(2) 
-    # Removed the 'pos' wrapper - passing the coordinates directly
-    nhfc.set_position({'x': 0, 'y': 0, 'z': 1, 'yaw': 0}) 
+    current_state_pos = np.zeros(3)
+    current_state_pos = pom.measure()['pos']
+    current_state_att = np.zeros(4)
+    current_state_att = pom.measure()['att']
+
+
+    current_state = 
     
-    time.sleep(5)
-    nhfc.set_position({'x': 0, 'y': 0, 'z': 0, 'yaw': 0})
-    time.sleep(3)
-    
+    time.sleep(2)
+    maneuver.set_state(x=0,y=0,z=0,yaw=0) 
+    maneuver.take_off(height=1, duration=5, send=True, ack=True)
+    #control command 1
+    time.sleep(10)
+    maneuver.set_current_state()
+    maneuver.goto(x=5,y=5,z=5,yaw=0.2, duration=10, send=True, ack=True)
+    #control command 2
 
 # --- start ----------------------------------------------------------------
 #
 # Spin the motors and servo on current position. To be called interactively
 # I have changed the folder to file path to save the log files
 # The below has been changed to save
+
 def start():
   pom.log_state('../logs/01_Quadrotor/pom.log')
   pom.log_measurements('../logs/01_Quadrotor/pom-measurements.log')
