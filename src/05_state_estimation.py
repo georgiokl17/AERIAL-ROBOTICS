@@ -116,15 +116,16 @@ def setup():
 
 
   variance_imu=rotorcraft.get_imu_calibration()
+  print(variance_imu)
 
-  variance_imu['imu_calibration']['astddev'] = [1,1,1]  #accelerometer noise
-  variance_imu['imu_calibration']['gstddev'] = [1,1,1]  #gyroscope noise
-  variance_imu['imu_calibration']['mstddev'] = [1,1,1]  #magnetometer noise
+  # variance_imu['imu_calibration']['astddev'] = [0.05,0.05,0.05]  #accelerometer noise
+  # variance_imu['imu_calibration']['gstddev'] = [0.01,0.01,0.01]  #gyroscope noise
+  # variance_imu['imu_calibration']['mstddev'] = [0.05,0.05,0.05]  #magnetometer noise
 
   rotorcraft.set_imu_calibration(variance_imu)
 
 
-  optitrack.set_noise(1,1)
+  #optitrack.set_noise(0.05,0.05)
 
 
 
