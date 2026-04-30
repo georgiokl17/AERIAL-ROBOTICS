@@ -48,14 +48,21 @@ def setup():
 
   # read propellers velocities from nhfc controller
   rotorcraft.connect_port({
-    'local': 'rotor_input', 'remote': 'nhfc/rotor_input'
+    'local': 'rotor_input', 'remote': 'uavatt/rotor_input'
   })
   #Created a port my_state_man where maneuver component will receive the state of the drone from our simulator
-  my_state_port_maneuver = maneuver.state('my_state_man')
+  #my_state_port_maneuver = maneuver.state('my_state_man')
    
   # connect maneuver to state port which will be updated by our simulator
-  maneuver.connect_port({ 'local': 'state', 'remote': 'my_state_man' })
+  maneuver.connect_port({ 'local': 'state', 'remote': 'pom/frame/robot'})
+  
+  # connect ports for new components
+  uavpos.connect_port({ 'local': 'state', 'remote': 'pom/frame/robot'})
+  uavpos.connect_port({ 'local': 'reference', 'remote': 'manuever/desired'})
 
+  uavatt.connect_port({ 'local': 'state', 'remote': 'pom/frame/robot'})
+  uavatt.connect_port({ 'local': 'uav_input', 'remote': 'uavpos/uav_input'})
+  uavatt.connect_port({ 'local': 'rotor_measure', 'remote': 'rotorcraft/rotor_measure'})
 
 #   # nhfc
 #   #
