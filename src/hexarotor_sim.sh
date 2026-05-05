@@ -37,7 +37,7 @@ while [ $# -gt 0 ]; do
     esac
 done
 dft_middleware=pocolibs
-dft_world=/home/stefano/tk3lab-ws/AREAL-ROBOTICS/gazebo/worlds/hexa_sdf.world
+dft_world=/home/georgio-kl/tk3lab-ws/gazebo/worlds/hexa_sdf.world
 
 # Genom3 components to run
 components="
