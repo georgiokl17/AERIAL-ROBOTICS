@@ -4,6 +4,7 @@ import time
 import math
 import numpy as np
 
+
 # this connects to components running on the same host (localhost)
 g = genomix.connect()
 # to instead control components running on the remote computer "hostname" use
@@ -20,6 +21,9 @@ nhfc = g.load('nhfc')
 uavpos = g.load('uavpos')
 uavatt = g.load('uavatt')
 
+
+def get_time_now_ms():
+    return time.clock_gettime_ns(time.CLOCK_REALTIME)*1e-6 # return ms
 # --- setup ----------------------------------------------------------------
 #
 # configure components, to be called interactively
@@ -66,7 +70,13 @@ def setup():
   uavatt.connect_port({ 'local': 'uav_input', 'remote': 'uavpos/uav_input'})
   uavatt.connect_port({ 'local': 'rotor_measure', 'remote': 'rotorcraft/rotor_measure'})
 
+  geom = {
+        'rotors': 6, 'cx': 0, 'cy': 0, 'cz': 0, 'armlen': 0.40998, 'mass': 2.3,
+        'rx': 2.7925, 'ry': -0.3491, 'rz': -1, 'cf': 9.9016e-4, 'ct': 1.9e-5
+    }
 
+  uavatt.set_gtmrp_geom(geom) #changed this only to have the cf as a variable we can use
+  
 
   # pom
   #
@@ -297,11 +307,38 @@ def traj_plan(x_current,x_desired,duration,dt):
     coeff_pitch = np.linalg.solve(A, Bpitch)
     coeff_yaw = np.linalg.solve(A, Byaw)
 
-    
-    
+    q_now=rpy_to_quaternion(roll_now,pitch_now,yaw_now)
+    qw_now=q_now[0]
+    qx_now=q_now[1]
+    qy_now=q_now[2]
+    qz_now=q_now[3]
+    state_now = np.array([x_now,y_now,z_now,qw_now,qx_now,qy_now,qz_now,
+                          vx_now,vy_now,vz_now,vroll_now,vpitch_now,vyaw_now,
+                          ax_now,ay_now,az_now,0,0,0,
+                          0,0,0,0,0,0])
+
+    state_pos = { 
+            "pos": ({"x": state_now[0], "y": state_now[1], "z": state_now[2]}),
+            "att": ({"qw": state_now[3], "qx": state_now[4], "qy": state_now[5], "qz": state_now[6]}),
+            "vel": ({"vx": state_now[7], "vy": state_now[8], "vz": state_now[9]}),
+            "avel": ({"wx": state_now[10], "wy": state_now[11], "wz": state_now[12]}),
+            "acc": ({"ax": state_now[13], "ay": state_now[14], "az": state_now[15]}),
+            "aacc": ({"awx": state_now[16], "awy": state_now[17], "awz": state_now[18]}),
+            "jerk": {"jx": state_now[19], "jy": state_now[20], "jz": state_now[21]},
+            "snap": {"sx": state_now[22], "sy": state_now[23], "sz": state_now[24]},
+            }
+        
+    state_att = { 
+            "thrust": ({"x": state_now[0], "y": state_now[1], "z": state_now[2]}),
+            "att": ({"qw": state_now[3], "qx": state_now[4], "qy": state_now[5], "qz": state_now[6]}),
+            "avel": ({"wx": state_now[10], "wy": state_now[11], "wz": state_now[12]}),
+            "aacc": ({"awx": state_now[16], "awy": state_now[17], "awz": state_now[18]}),
+            }
+    uavpos.set_state(state_pos)
+    uavatt.set_state(state_att)
 
     for i in range(iteration):
-
+        t1 = get_time_now_ms()
         nt=i*dt
         
         
@@ -347,7 +384,7 @@ def traj_plan(x_current,x_desired,duration,dt):
            vrollt,vpitcht,vyawt])
         orient=np.array([qw,qx,qy,qz])
         R=quaternion_to_rotation_matrix(orient)
-        om=np.array([0,0,yawt])
+        om=np.array([vrollt,vpitcht,vyawt])
         om_w=R@om
         qomg_W=np.hstack((0, om_w))
         orient_dot=0.5*quaternon_mult(qomg_W,orient)
@@ -357,17 +394,16 @@ def traj_plan(x_current,x_desired,duration,dt):
                        arollt,apitcht,ayawt])
         jerk_snap=np.array([jerk_x,jerk_y,jerk_z,snap_x,snap_y,snap_z])
         state = np.hstack((xh, xdot[-6:],jerk_snap))
+
+        t2 = get_time_now_ms()
+        elapsed_time = t2-t1
+        time.sleep(dt-elapsed_time*1e-3)
+        print(f"delay of: {elapsed_time}ms")
         reference_to_uavpos(reference_port_uavpos,state)
 
     
 
         ct=nt
-
-  
-
-   
-
-
 
 # Function that make the quadrotor follow the given trajectory
 def move():
@@ -409,6 +445,11 @@ def start():
 
   rotorcraft.log('../logs/01_Quadrotor/rotorcraft.log')
   rotorcraft.start()
+  time.sleep(2)
+
+  uavpos.servo(ack=True)
+  uavatt.servo(ack=True)
+
   rotorcraft.servo(ack=True) # this runs until stopped or input error
 
   
