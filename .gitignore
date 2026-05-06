@@ -1,1 +1,4 @@
 .bashrc_georgio-kl
+
+logs/01_Quadrotor/*.log
+
