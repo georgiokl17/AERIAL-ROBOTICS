@@ -3,7 +3,7 @@ import os
 import time
 import math
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 # this connects to components running on the same host (localhost)
 g = genomix.connect()
@@ -72,7 +72,7 @@ def setup():
 
   geom = {
         'rotors': 6, 'cx': 0, 'cy': 0, 'cz': 0, 'armlen': 0.40998, 'mass': 2.3,
-        'rx': 2.7925, 'ry': -0.3491, 'rz': -1, 'cf': 9.9016e-4, 'ct': 1.9e-5
+        'rx': 160, 'ry': -20, 'rz': -1, 'cf': 9.9016e-4, 'ct': 1.9e-5
     }
 
   uavatt.set_gtmrp_geom(geom) #changed this only to have the cf as a variable we can use
@@ -106,7 +106,7 @@ def setup():
 
 
   variance_imu=rotorcraft.get_imu_calibration()
-  print(variance_imu)
+  #print(variance_imu)
 
   
 
@@ -151,10 +151,8 @@ def reference_to_uavpos(reference_port, state: np.array):
 
 
 def quaternion_to_euler(q):
-    """
-    Converts a quaternion [qx, qy, qz, qw] into roll, pitch, and yaw (in radians).
-    """
-    qx, qy, qz, qw = q
+
+    qw, qx, qy, qz = q
 
     # Roll (x-axis rotation)
     sinr_cosp = 2 * (qw * qx + qy * qz)
@@ -336,7 +334,13 @@ def traj_plan(x_current,x_desired,duration,dt):
             }
     uavpos.set_state(state_pos)
     uavatt.set_state(state_att)
-
+    traj_x = []
+    traj_y = []
+    traj_z = []
+    traj_roll = []
+    traj_pitch = []
+    traj_yaw = []
+    time_forplot = []
     for i in range(iteration):
         t1 = get_time_now_ms()
         nt=i*dt
@@ -398,13 +402,65 @@ def traj_plan(x_current,x_desired,duration,dt):
         t2 = get_time_now_ms()
         elapsed_time = t2-t1
         time.sleep(dt-elapsed_time*1e-3)
-        print(f"delay of: {elapsed_time}ms")
+        #print(f"delay of: {elapsed_time}ms")
         reference_to_uavpos(reference_port_uavpos,state)
 
-    
+        traj_x.append(xt)
+        traj_y.append(yt)
+        traj_z.append(zt)
+        traj_roll.append(rollt)
+        traj_pitch.append(pitcht)
+        traj_yaw.append(yawt)
+
+        time_forplot.append(ct)
 
         ct=nt
+    
+    plt.figure
+    plt.plot(time_forplot, traj_x)
+    plt.xlabel("t")
+    plt.ylabel("x")
+    plt.title("Planned trajectory")
+    plt.show()
 
+    plt.figure
+    plt.plot(time_forplot, traj_y)
+    plt.xlabel("t")
+    plt.ylabel("y")
+    plt.title("Planned trajectory")
+    plt.show()
+
+    plt.figure
+    plt.plot(time_forplot, traj_z)
+    plt.xlabel("t")
+    plt.ylabel("z")
+    plt.title("Planned trajectory")
+    plt.show()
+
+    plt.figure
+    plt.plot(time_forplot, traj_roll)
+    plt.xlabel("t")
+    plt.ylabel("roll")
+    plt.title("Planned trajectory")
+    plt.show()
+
+    plt.figure
+    plt.plot(time_forplot, traj_pitch)
+    plt.xlabel("t")
+    plt.ylabel("yaw")
+    plt.title("Planned trajectory")
+    plt.show()
+
+    plt.figure
+    plt.plot(time_forplot, traj_yaw)
+    plt.xlabel("t")
+    plt.ylabel("yaw")
+    plt.title("Planned trajectory")
+    plt.show()
+
+state = pom.frame('robot')['frame']
+pos = state['pos']
+print(pos['x'])
 # Function that make the quadrotor follow the given trajectory
 def move():
     state = pom.frame('robot')['frame']
@@ -413,22 +469,23 @@ def move():
     att = state['att']
 
     current_state_pos = np.array([pos['x'], pos['y'], pos['z']])
-    current_state_att = np.array([att['qx'], att['qy'], att['qz'], att['qw']])
+    current_state_att = np.array([att['qw'], att['qx'], att['qy'], att['qz']])
 
     euler=quaternion_to_euler(current_state_att)
     
-
+    print("this is euler", euler)
+    print("this is x pos", current_state_pos[0])
 
     # current_state = 
     xnow=np.hstack((current_state_pos,euler))
-    xfinal=[1,1,1,0,0,0]
+    xfinal=[2,1,1,1,1,1]
     duration=5
     dt=0.01
     time.sleep(2)
     traj_plan(xnow,xfinal,duration,dt)
     #control command 1
-    time.sleep(10)
-    traj_plan(xfinal,xnow,duration,dt)
+    #time.sleep(10)
+    #traj_plan(xfinal,xnow,duration,dt)
     #control command 2
 
 # --- start ----------------------------------------------------------------
