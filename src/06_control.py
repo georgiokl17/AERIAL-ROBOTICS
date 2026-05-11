@@ -58,8 +58,53 @@ def setup():
   })
   
 
+  # UAVPOS SETTINGS:
+   # --- uavpos ---
+  uavpos.set_mass({'mass': 2.3})
+
+  uavpos.set_xyradius({'rxy': 2.0})   # from the slide guideline
+
+  uavpos.set_saturation({'sat': {
+        'x': 1,
+        'v': 1,
+        'ix': 0
+  }})
+
+  uavpos.set_servo_gain({'gain': {
+        'Kpxy': 5.0,
+        'Kpz': 5.0,
+        'Kvxy': 6.0,
+        'Kvz': 6.0,
+        'Kixy': 0.0,
+        'Kiz': 0.0
+  }})
+
+  uavpos.set_emerg({'emerg': {
+        'descent': 0.1,
+        'dx': 0.05,
+        'dv': 0.2
+  }})
+  # UAVATT SETTINGS:
+  uavatt.set_mass({'mass': 2.72})
+
+  uavatt.set_wlimit({
+        'wmin': 0.0,
+        'wmax': 120.0
+  })
+
+
+  uavatt.set_servo_gain({'gain': {
+        'Kqxy': 4.0,
+        'Kqz': 0.1,
+        'Kwxy': 1.0,
+        'Kwz': 0.1
+  }})
+
+  uavatt.set_emerg({'emerg': {
+        'dq': 20,
+        'dw': 20
+  }})
   
- 
 
   my_reference_port = uavpos.reference('my_reference')
     # connect ports for new components
@@ -72,7 +117,7 @@ def setup():
 
   geom = {
         'rotors': 6, 'cx': 0, 'cy': 0, 'cz': 0, 'armlen': 0.40998, 'mass': 2.3,
-        'rx': 160, 'ry': -20, 'rz': -1, 'cf': 9.9016e-4, 'ct': 1.9e-5
+        'rx': -20, 'ry': 0, 'rz': -1, 'cf': 9.9016e-4, 'ct': 1.9e-5
     }
 
   uavatt.set_gtmrp_geom(geom) #changed this only to have the cf as a variable we can use
@@ -495,15 +540,15 @@ def move():
 # The below has been changed to save
 
 def start():
-  pom.log_state('../logs/01_Quadrotor/pom.log')
-  pom.log_measurements('../logs/01_Quadrotor/pom-measurements.log')
+  # pom.log_state('../logs/01_Quadrotor/pom.log')
+  # pom.log_measurements('../logs/01_Quadrotor/pom-measurements.log')
 
-  optitrack.set_logfile('../logs/01_Quadrotor/opti.log')
+  # optitrack.set_logfile('../logs/01_Quadrotor/opti.log')
 
-  rotorcraft.log('../logs/01_Quadrotor/rotorcraft.log')
+  # rotorcraft.log('../logs/01_Quadrotor/rotorcraft.log')
   rotorcraft.start()
-  time.sleep(2)
-
+  time.sleep(0.5)
+  uavpos.set_current_position()
   uavpos.servo(ack=True)
   uavatt.servo(ack=True)
 
