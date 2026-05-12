@@ -523,7 +523,7 @@ def move():
 
     # current_state = 
     xnow=np.hstack((current_state_pos,euler))
-    xfinal=[2,1,1,1,1,1]
+    xfinal=[2,2,1,0,0,0]
     duration=5
     dt=0.01
     time.sleep(2)

@@ -68,5 +68,35 @@
         <name>QR_4</name>
       </publish>
     </plugin>
+
+    <plugin name="dxsim" filename="dxsim-gazebo.so">
+    <pty>/tmp/pty-dynamixel</pty>
+    <period>1e-3</period>
+    <motors>
+      <motor>
+        <joint spin="ccw">joint_2</joint>
+        <eeprom>$HOME/dx_eeprom_id1</eeprom>
+        <model>MX64T</model>
+        <p0>0.0</p0>
+        <v0>0.0</v0>
+        <id>1</id>
+        <noise>0</noise>
+        <debug>0</debug>
+      </motor>
+
+      <motor>
+        <joint spin="ccw">joint_3</joint>
+        <eeprom>$HOME/dx_eeprom_id2</eeprom>
+        <model>MX28T</model>
+        <p0>0.0</p0>
+        <v0>0.0</v0>
+        <id>2</id>
+        <noise>0</noise>
+        <debug>0</debug>
+      </motor>
+    </motors>
+
+  </plugin>
+
   </world>
 </sdf>
