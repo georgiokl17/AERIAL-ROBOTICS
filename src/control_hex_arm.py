@@ -21,6 +21,7 @@ nhfc = g.load('nhfc')
 uavpos = g.load('uavpos')
 uavatt = g.load('uavatt')
 maneuver = g.load('maneuver')
+dynamixel = g.load('dynamixel')
 
 def get_time_now_ms():
     return time.clock_gettime_ns(time.CLOCK_REALTIME)*1e-6 # return ms
@@ -35,6 +36,11 @@ def setup():
     'host': 'localhost', 'host_port': '1509', 'mcast': '', 'mcast_port': '0'
   })
 
+  dynamixel.connect({  #connecting the dynamix model
+    'serial': '/tmp/pty-dynamixel',  #since that is the serial we created in the plugin of hexa arm
+    'baud': 1000000  #baud rate
+  })
+  
 
   # rotorcraft
   #
