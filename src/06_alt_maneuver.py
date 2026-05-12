@@ -181,6 +181,8 @@ def move():
     maneuver.goto(x=5,y=5,z=5,yaw=0.2, duration=10, send=True, ack=True)
     #control command 2
     time.sleep(10)
+    maneuver.goto(x=0,y=0,z=1,yaw=0, duration=10, send=True, ack=True)
+    time.sleep(10)
 
 # --- start ----------------------------------------------------------------
 #
