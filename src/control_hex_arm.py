@@ -67,7 +67,7 @@ def setup():
   
   # UAVPOS SETTINGS:
    # --- uavpos ---
-  uavpos.set_mass({'mass': 2.82})
+  uavpos.set_mass({'mass': 3.55})
 
   uavpos.set_xyradius({'rxy': 2.0})   # from the slide guideline
 
@@ -92,7 +92,7 @@ def setup():
         'dv': 0.2
   }})
   # UAVATT SETTINGS:
-  uavatt.set_mass({'mass': 2.82})
+  uavatt.set_mass({'mass': 3.55})
 
   uavatt.set_wlimit({
         'wmin': 0.0,
@@ -127,7 +127,7 @@ def setup():
   uavatt.connect_port({ 'local': 'rotor_measure', 'remote': 'rotorcraft/rotor_measure'})
 
   geom = {
-        'rotors': 6, 'cx': 0, 'cy': 0, 'cz': 0, 'armlen': 0.40998, 'mass': 2.82,
+        'rotors': 6, 'cx': 0, 'cy': 0.0, 'cz': -0.0, 'armlen': 0.40998, 'mass': 3.55,
         'rx': -20, 'ry': 0, 'rz': -1, 'cf': 9.9016e-4, 'ct': 1.9e-5
     }
 
@@ -186,10 +186,12 @@ def move():
 
     time.sleep(2)
     
-    maneuver.goto(x=0,y=0,z=2,yaw=0, duration=10, send=True, ack=True)
+    maneuver.goto(x=2,y=2,z=2,yaw=0, duration=10, send=True, ack=True)
     #control command 2
     time.sleep(10)
+    maneuver.goto(x=2,y=2,z=0,yaw=0, duration=10, send=True, ack=True)
 
+    time.sleep(10)
 # --- start ----------------------------------------------------------------
 #
 # Spin the motors and servo on current position. To be called interactively
