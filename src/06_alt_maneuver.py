@@ -59,7 +59,7 @@ def setup():
   
   # UAVPOS SETTINGS:
    # --- uavpos ---
-  uavpos.set_mass({'mass': 2.3})
+  uavpos.set_mass({'mass': 2.55})
 
   uavpos.set_xyradius({'rxy': 2.0})   # from the slide guideline
 

@@ -49,7 +49,99 @@
         </visual>
       </link>
     </model>
+  
+  <!-- Stazione di consegna con RAMPE e buco da 10cm -->
+    <model name="delivery_station">
+      <static>true</static>
+      <pose>0 0 0.02 0 0 0</pose> <!-- Leggermente sollevata -->
+      
+      <!-- RAMPA NORD (Inclinata verso il centro) -->
+      <link name="rampa_north">
+        <pose>0.12 0 0 0 0.3 0</pose> <!-- Inclinazione su asse Y -->
+        <collision name="c"><geometry><box><size>0.15 0.3 0.04</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>0.15 0.3 0.04</size></box></geometry>
+          <material><ambient>0.3 0.3 0.3 1</ambient></material>
+        </visual>
+      </link>
 
+      <!-- RAMPA SUD -->
+      <link name="rampa_south">
+        <pose>-0.12 0 0 0 -0.3 0</pose>
+        <collision name="c"><geometry><box><size>0.15 0.3 0.04</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>0.15 0.3 0.04</size></box></geometry>
+          <material><ambient>0.3 0.3 0.3 1</ambient></material>
+        </visual>
+      </link>
+
+      <!-- RAMPA EST -->
+      <link name="rampa_east">
+        <pose>0 0.12 0 -0.3 0 0</pose> <!-- Inclinazione su asse X -->
+        <collision name="c"><geometry><box><size>0.3 0.15 0.04</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>0.3 0.15 0.04</size></box></geometry>
+          <material><ambient>0.3 0.3 0.3 1</ambient></material>
+        </visual>
+      </link>
+
+      <!-- RAMPA OVEST -->
+      <link name="rampa_west">
+        <pose>0 -0.12 0 0.3 0 0</pose>
+        <collision name="c"><geometry><box><size>0.3 0.15 0.04</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>0.3 0.15 0.04</size></box></geometry>
+          <material><ambient>0.3 0.3 0.3 1</ambient></material>
+        </visual>
+      </link>
+    </model>
+ 
+    <model name="target_ball">
+      <pose>1.5 0 0.1 0 0 0</pose> 
+      <link name="link_ball">
+        <inertial>
+          <mass>0.05</mass>
+          <inertia>
+            <ixx>0.00002</ixx><ixy>0</ixy><ixz>0</ixz>
+            <iyy>0.00002</iyy><iyz>0</iyz>
+            <izz>0.00002</izz>
+          </inertia>
+        </inertial>
+        
+        <collision name="collision_ball">
+          <geometry>
+            <sphere><radius>0.04</radius></sphere> 
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.2</mu> 
+                <mu2>1.2</mu2>
+              </ode>
+            </friction>
+            <contact>
+              <ode>
+                <kp>1000000.0</kp> 
+                <kd>1.0</kd>
+                <max_vel>0.1</max_vel>
+                <min_depth>0.001</min_depth>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <visual name="visual_ball">
+          <geometry>
+            <sphere><radius>0.04</radius></sphere>
+          </geometry>
+          <material>
+            <ambient>1 0.5 0 1</ambient> 
+            <diffuse>1 0.5 0 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+  
     <include>
       <uri>model://hexa-with-arm</uri>
       <name>hr6</name>
