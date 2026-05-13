@@ -40,9 +40,9 @@ def setup():
     'serial': '/tmp/pty-dynamixel',  #since that is the serial we created in the plugin of hexa arm
     'baud': 1000000  #baud rate
   })
-  # dynamixel.set_position({  #setting fixed initial position of motor
-  #   'position': [0.1]
-  # })
+  dynamixel.set_position({  #setting fixed initial position of motor
+    'position': [0.1]
+  })
 
   # rotorcraft
   #

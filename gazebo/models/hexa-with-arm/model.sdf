@@ -287,11 +287,16 @@
   <joint name="joint2" type="revolute">
     <parent>link1</parent>
     <child>link2</child>
-    <pose>0 0 0.15 0 0 0</pose> <axis>
+    <pose>0 0 0.15 0 0 0</pose> 
+    <axis>
       <xyz>1 0 0</xyz>
       <limit>
         <lower>-1.57</lower> <upper>1.57</upper>
       </limit>
+      <dynamics>
+        <damping>0.5</damping>
+        <friction>0.05</friction>
+      </dynamics>
     </axis>
   </joint>
   
