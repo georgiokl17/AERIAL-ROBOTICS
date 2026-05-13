@@ -40,7 +40,9 @@ def setup():
     'serial': '/tmp/pty-dynamixel',  #since that is the serial we created in the plugin of hexa arm
     'baud': 1000000  #baud rate
   })
-  
+  # dynamixel.set_position({  #setting fixed initial position of motor
+  #   'position': [0.1]
+  # })
 
   # rotorcraft
   #
@@ -65,7 +67,7 @@ def setup():
   
   # UAVPOS SETTINGS:
    # --- uavpos ---
-  uavpos.set_mass({'mass': 2.3})
+  uavpos.set_mass({'mass': 2.82})
 
   uavpos.set_xyradius({'rxy': 2.0})   # from the slide guideline
 
@@ -90,7 +92,7 @@ def setup():
         'dv': 0.2
   }})
   # UAVATT SETTINGS:
-  uavatt.set_mass({'mass': 2.72})
+  uavatt.set_mass({'mass': 2.82})
 
   uavatt.set_wlimit({
         'wmin': 0.0,
@@ -125,7 +127,7 @@ def setup():
   uavatt.connect_port({ 'local': 'rotor_measure', 'remote': 'rotorcraft/rotor_measure'})
 
   geom = {
-        'rotors': 6, 'cx': 0, 'cy': 0, 'cz': 0, 'armlen': 0.40998, 'mass': 2.3,
+        'rotors': 6, 'cx': 0, 'cy': 0, 'cz': 0, 'armlen': 0.40998, 'mass': 2.82,
         'rx': -20, 'ry': 0, 'rz': -1, 'cf': 9.9016e-4, 'ct': 1.9e-5
     }
 
@@ -184,7 +186,7 @@ def move():
 
     time.sleep(2)
     
-    maneuver.goto(x=5,y=5,z=5,yaw=0.2, duration=10, send=True, ack=True)
+    maneuver.goto(x=0,y=0,z=2,yaw=0, duration=10, send=True, ack=True)
     #control command 2
     time.sleep(10)
 
