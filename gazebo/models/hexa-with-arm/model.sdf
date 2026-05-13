@@ -242,7 +242,7 @@
     </plugin>
     
     <link name="link1">
-    <pose>0 0 -0.1 0 0 0</pose> 
+    <pose>0 0 -0.075 0 0 0</pose> 
     <inertial>
       <mass>0.1</mass>
       <inertia>
@@ -257,7 +257,7 @@
   </link>
 
   <link name="link2">
-    <pose>0 0.05 -0.15 1.57 0 0</pose>
+    <pose>0 0.05 -0.125 1.57 0 0</pose>
     <inertial>
       <mass>0.1</mass>
       <inertia>
@@ -286,5 +286,52 @@
       </limit>
     </axis>
   </joint>
+  
+
+  <link name="gripper">
+    <pose>0 0.1 -0.125 1.57 0 0</pose> 
+    <inertial>
+      <mass>0.05</mass>
+      <inertia>
+        <ixx>0.0001</ixx><ixy>0</ixy><ixz>0</ixz>
+        <iyy>0.0001</iyy><iyz>0</iyz>
+        <izz>0.0001</izz>
+      </inertia>
+    </inertial>
+
+    <!-- Base della U -->
+    <visual name="gripper_base">
+      <pose>0 0 0.05 0 1.5708 0</pose>
+      <geometry>
+        <cylinder><radius>0.01</radius><length>0.1</length></cylinder>
+      </geometry>
+      <material><ambient>0.5 0.5 0.5 1</ambient></material>
+    </visual>
+
+   
+    <visual name="finger_left">
+      <pose>0.05 0 0.08 0 0 0</pose>
+      <geometry>
+        <cylinder><radius>0.005</radius><length>0.06</length></cylinder>
+      </geometry>
+      <material><ambient>0.5 0.5 0.5 1</ambient></material>
+    </visual>
+
+    <visual name="finger_right">
+      <pose>-0.05 0 0.08 0 0 0</pose>
+      <geometry>
+        <cylinder><radius>0.005</radius><length>0.06</length></cylinder>
+      </geometry>
+      <material><ambient>0.5 0.5 0.5 1</ambient></material>
+    </visual>
+  </link>
+
+
+  <joint name="gripper_joint" type="fixed">
+    <parent>link2</parent>
+    <child>gripper</child>
+    <pose>0 0 -0.05 0 0 0</pose>
+  </joint>
+  
 </model>
 </sdf>
