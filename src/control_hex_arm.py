@@ -22,6 +22,7 @@ uavpos = g.load('uavpos')
 uavatt = g.load('uavatt')
 maneuver = g.load('maneuver')
 dynamixel = g.load('dynamixel')
+phynt = g.load('phynt')
 
 def get_time_now_ms():
     return time.clock_gettime_ns(time.CLOCK_REALTIME)*1e-6 # return ms
@@ -67,7 +68,7 @@ def setup():
   
   # UAVPOS SETTINGS:
    # --- uavpos ---
-  uavpos.set_mass({'mass': 3.55})
+  uavpos.set_mass({'mass': 3.2})
 
   uavpos.set_xyradius({'rxy': 2.0})   # from the slide guideline
 
@@ -92,7 +93,7 @@ def setup():
         'dv': 0.2
   }})
   # UAVATT SETTINGS:
-  uavatt.set_mass({'mass': 3.55})
+  uavatt.set_mass({'mass': 3.2})
 
   uavatt.set_wlimit({
         'wmin': 0.0,
@@ -114,23 +115,51 @@ def setup():
 
  
 
-  my_reference_port = uavpos.reference('my_reference')
-    # connect ports for new components
-  uavpos.connect_port({ 'local': 'state', 'remote': 'pom/frame/robot'})
-  uavpos.connect_port({ 'local': 'reference', 'remote': 'my_reference'})
-  uavpos.connect_port({'local':'reference','remote': 'maneuver/desired'})
-
+   # connect ports for new components
   maneuver.connect_port({ 'local': 'state', 'remote': 'pom/frame/robot' })
+  phynt.connect_port({'local': 'state', 'remote': 'pom/frame/robot'})
+  phynt.connect_port({'local': 'reference', 'remote': 'maneuver/desired'})
 
+  uavpos.connect_port({ 'local': 'state', 'remote': 'pom/frame/robot'})
+
+  uavpos.connect_port({'local': 'reference', 'remote': 'phynt/desired'})
   uavatt.connect_port({ 'local': 'state', 'remote': 'pom/frame/robot'})
   uavatt.connect_port({ 'local': 'uav_input', 'remote': 'uavpos/uav_input'})
   uavatt.connect_port({ 'local': 'rotor_measure', 'remote': 'rotorcraft/rotor_measure'})
 
   geom = {
-        'rotors': 6, 'cx': 0, 'cy': 0.0, 'cz': -0.0, 'armlen': 0.40998, 'mass': 3.55,
+        'rotors': 6, 'cx': 0, 'cy': 0.0, 'cz': -0.0, 'armlen': 0.40998, 'mass': 3.2,
         'rx': -20, 'ry': 0, 'rz': -1, 'cf': 9.9016e-4, 'ct': 1.9e-5
     }
+  
+  phynt.set_mass({'mass': 3})
+  phynt.set_geom({'J': [
+        0.012, 0,     0,
+        0,     0.012, 0,
+        0,     0,     0.020] })
+  
+  phynt.set_af_parameters({
+        'mass': 5.0,   # apparent mass, larger than real mass
+        'B': [8, 8, 8, 1, 1, 1],
+        'K': [50, 10, 50, 5, 5, 5],
+        'J': [
+        0.012, 0,     0,
+        0,     0.012, 0,
+        0,     0,     0.020]
+    })
+  phynt.set_wo_gains({ #idk all these from chat gpt and documentation
+        'K': [1, 1, 1, 1, 1, 1]
+    })
 
+  phynt.set_wo_fc({
+      'fc': [20, 20, 20, 20, 20, 20]
+  })
+
+  phynt.enable({
+      'enable': {
+          'wo': False,
+          'af': True
+      }})
   uavatt.set_gtmrp_geom(geom) #changed this only to have the cf as a variable we can use
   
 
@@ -178,20 +207,43 @@ def setup():
 state = pom.frame('robot')['frame']
 pos = state['pos']
 print(pos['x'])
+print(pos['z'])
 # Function that make the quadrotor follow the given trajectory
 def move():
-    maneuver.set_bounds(xmin=0,xmax=5,ymin=0,ymax=5,zmin=0,zmax=5,yawmin=0,yawmax=0.5) #setting bounds for the maneuver component to make sure the drone does not go out of a certain area)
+    angle_motor=-0.5
+    offset_y = math.cos(angle_motor)*0.3
+    offset_z = math.sin(angle_motor)*0.3-0.1-0.025
+    x_contact=1.5
+    y_contact=0
+    z_contact=0
+    x_drone = x_contact
+    y_drone = y_contact - offset_y
+    z_drone = z_contact - offset_z 
+    print(z_drone)
+    print(y_drone)
+    maneuver.set_bounds(xmin=-5,xmax=5,ymin=-5,ymax=5,zmin=0,zmax=5,yawmin=0,yawmax=3.14) #setting bounds for the maneuver component to make sure the drone does not go out of a certain area)
 
     maneuver.set_current_state() 
 
     time.sleep(2)
     
-    maneuver.goto(x=2,y=2,z=2,yaw=0, duration=10, send=True, ack=True)
+    maneuver.goto(x=2.5,y=0,z=2,yaw=3.14/2, duration=10, send=True, ack=True)
     #control command 2
-    time.sleep(10)
-    maneuver.goto(x=2,y=2,z=0,yaw=0, duration=10, send=True, ack=True)
+    time.sleep(20)
 
-    time.sleep(10)
+    dynamixel.set_position({  #setting fixed initial position of motor
+    'position': [angle_motor]
+      })
+
+    maneuver.goto(x=x_drone-y_drone,y=0.1,z=z_drone,yaw=3.14/2, duration=10, send=True, ack=True)
+
+    time.sleep(20)
+    pos = state['pos']
+    print(pos['z'])
+    maneuver.goto(x=-0.5,y=0,z=z_drone,yaw=3.14/2, duration=10, send=True, ack=True)
+
+    time.sleep(20)
+
 # --- start ----------------------------------------------------------------
 #
 # Spin the motors and servo on current position. To be called interactively
@@ -210,6 +262,7 @@ def start():
 
   uavpos.set_current_position() # must be before servo otherwise it interrupts the servo activity
 
+  phynt.servo(ack=True)
   uavpos.servo(ack=True)
   uavatt.servo(ack=True)
   rotorcraft.servo(ack=True) # this runs until stopped or input error
