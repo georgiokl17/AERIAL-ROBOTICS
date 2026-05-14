@@ -60,7 +60,7 @@ def setup():
 
   # UAVPOS SETTINGS:
    # --- uavpos ---
-  uavpos.set_mass({'mass': 2.3})
+  uavpos.set_mass({'mass': 2.55})
 
   uavpos.set_xyradius({'rxy': 2.0})   # from the slide guideline
 
@@ -75,8 +75,8 @@ def setup():
         'Kpz': 5.0,
         'Kvxy': 6.0,
         'Kvz': 6.0,
-        'Kixy': 0.0,
-        'Kiz': 0.0
+        'Kixy': 1.0,
+        'Kiz': 1.0
   }})
 
   uavpos.set_emerg({'emerg': {
@@ -85,7 +85,7 @@ def setup():
         'dv': 0.2
   }})
   # UAVATT SETTINGS:
-  uavatt.set_mass({'mass': 2.72})
+  uavatt.set_mass({'mass': 2.55})
 
   uavatt.set_wlimit({
         'wmin': 0.0,
