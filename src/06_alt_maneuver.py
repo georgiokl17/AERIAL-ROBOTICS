@@ -68,7 +68,7 @@ def setup():
 
   # UAVPOS SETTINGS:
    # --- uavpos ---
-  uavpos.set_mass({'mass': 2.55})
+  uavpos.set_mass({'mass': 2.3})
 
   uavpos.set_xyradius({'rxy': 2.0})   # from the slide guideline
 
@@ -79,12 +79,12 @@ def setup():
   }})
 
   uavpos.set_servo_gain({'gain': {
-        'Kpxy': 50.0,
-        'Kpz': 50.0,
-        'Kvxy': 10.0,
-        'Kvz': 10.0,
-        'Kixy': 50.0,
-        'Kiz': 50.0
+        'Kpxy': 30.0,
+        'Kpz': 250,
+        'Kvxy': 6.0,
+        'Kvz': 9.0,
+        'Kixy': 10.0,
+        'Kiz': 10.0
   }})
 
   uavpos.set_emerg({'emerg': {
@@ -93,7 +93,7 @@ def setup():
         'dv': 0.2
   }})
   # UAVATT SETTINGS:
-  uavatt.set_mass({'mass': 2.55})
+  uavatt.set_mass({'mass': 2.3})
 
   uavatt.set_wlimit({
         'wmin': 0.0,
@@ -128,7 +128,7 @@ def setup():
   uavatt.connect_port({ 'local': 'rotor_measure', 'remote': 'rotorcraft/rotor_measure'})
 
   geom = {
-        'rotors': 6, 'cx': 0, 'cy': 0, 'cz': 0, 'armlen': 0.40998, 'mass': 2.55,
+        'rotors': 6, 'cx': 0, 'cy': 0, 'cz': 0, 'armlen': 0.40998, 'mass': 2.3,
         'rx': -20, 'ry': 0, 'rz': -1, 'cf': 9.9016e-4, 'ct': 1.9e-5
     }
 
@@ -188,24 +188,24 @@ def move():
     maneuver.set_current_state() 
 
     time.sleep(2)
-    x_drone = 2
-    y_drone = 2
-    z_drone = 2
+    x_drone = 5
+    y_drone = 5
+    z_drone = 5
     print('it should go to this z position:',z_drone)
     print('it should go to this y position:',y_drone)
     print('it should go to this x position:',x_drone)
     
-    maneuver.goto(x=x_drone,y=y_drone,z=z_drone,yaw=0, duration=20, send=True, ack=True)
+    maneuver.goto(x=x_drone,y=y_drone,z=z_drone,yaw=0, duration=15, send=True, ack=True)
     #control command 2
-    time.sleep(20)
-    maneuver.goto(x=x_drone,y=y_drone,z=z_drone,yaw=0, duration=20, send=True, ack=True)
+    time.sleep(15)
+    #maneuver.goto(x=x_drone,y=y_drone,z=z_drone,yaw=0, duration=15, send=True, ack=True)
     state2 = pom.frame('robot')['frame']
     pos2 = state2['pos']
     print('It is going to this z',pos2['z'])
     print('It is going to this y',pos2['y'])
     print('It is going to this x',pos2['x'])
     #maneuver.goto(x=0,y=0,z=0,yaw=0, duration=10, send=True, ack=True)
-    time.sleep(20)
+    time.sleep(15)
 
 # --- start ----------------------------------------------------------------
 #
