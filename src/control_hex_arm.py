@@ -42,7 +42,7 @@ def setup():
     'baud': 1000000  #baud rate
   })
   dynamixel.set_position({  #setting fixed initial position of motor
-    'position': [0.1]
+    'position': [0]
   })
 
   # rotorcraft
@@ -68,7 +68,7 @@ def setup():
   
   # UAVPOS SETTINGS:
    # --- uavpos ---
-  uavpos.set_mass({'mass': 3.2})
+  uavpos.set_mass({'mass': 3.55})
 
   uavpos.set_xyradius({'rxy': 2.0})   # from the slide guideline
 
@@ -93,7 +93,7 @@ def setup():
         'dv': 0.2
   }})
   # UAVATT SETTINGS:
-  uavatt.set_mass({'mass': 3.2})
+  uavatt.set_mass({'mass': 3.55})
 
   uavatt.set_wlimit({
         'wmin': 0.0,
@@ -128,11 +128,11 @@ def setup():
   uavatt.connect_port({ 'local': 'rotor_measure', 'remote': 'rotorcraft/rotor_measure'})
 
   geom = {
-        'rotors': 6, 'cx': 0, 'cy': 0.0, 'cz': -0.0, 'armlen': 0.40998, 'mass': 3.2,
+        'rotors': 6, 'cx': 0, 'cy': 0.0, 'cz': 0.0, 'armlen': 0.40998, 'mass': 3.55,
         'rx': -20, 'ry': 0, 'rz': -1, 'cf': 9.9016e-4, 'ct': 1.9e-5
     }
   
-  phynt.set_mass({'mass': 3})
+  phynt.set_mass({'mass': 3.55})
   phynt.set_geom({'J': [
         0.012, 0,     0,
         0,     0.012, 0,
@@ -140,12 +140,14 @@ def setup():
   
   phynt.set_af_parameters({
         'mass': 5.0,   # apparent mass, larger than real mass
-        'B': [8, 8, 8, 1, 1, 1],
-        'K': [50, 10, 50, 5, 5, 5],
-        'J': [
-        0.012, 0,     0,
-        0,     0.012, 0,
-        0,     0,     0.020]
+        'B': [8, 8, 8, 
+              1, 1, 1],
+        'K': [50, 10, 50, 
+              5, 5, 5],
+        'J': [0.012, 0,     0,
+              0,     0.012, 0,
+              0,     0,     0.020]
+        
     })
   phynt.set_wo_gains({ #idk all these from chat gpt and documentation
         'K': [1, 1, 1, 1, 1, 1]
@@ -219,15 +221,16 @@ def move():
     x_drone = x_contact
     y_drone = y_contact - offset_y
     z_drone = z_contact - offset_z 
-    print(z_drone)
-    print(y_drone)
+    print('it should go to this z position:',z_drone)
+    print('it should go to this y position:',y_drone)
+    print('it should go to this x position:',x_drone)
     maneuver.set_bounds(xmin=-5,xmax=5,ymin=-5,ymax=5,zmin=0,zmax=5,yawmin=0,yawmax=3.14) #setting bounds for the maneuver component to make sure the drone does not go out of a certain area)
 
     maneuver.set_current_state() 
 
     time.sleep(2)
     
-    maneuver.goto(x=2.5,y=0,z=2,yaw=3.14/2, duration=10, send=True, ack=True)
+    maneuver.goto(x=2.5,y=0,z=2,yaw=0, duration=10, send=True, ack=True)
     #control command 2
     time.sleep(20)
 
@@ -235,12 +238,14 @@ def move():
     'position': [angle_motor]
       })
 
-    maneuver.goto(x=x_drone-y_drone,y=0.1,z=z_drone,yaw=3.14/2, duration=10, send=True, ack=True)
+    maneuver.goto(x=x_drone,y=y_drone,z=z_drone,yaw=0, duration=10, send=True, ack=True)
 
     time.sleep(20)
     pos = state['pos']
-    print(pos['z'])
-    maneuver.goto(x=-0.5,y=0,z=z_drone,yaw=3.14/2, duration=10, send=True, ack=True)
+    print('It is going to this z',pos['z'])
+    print('It is going to this y',pos['y'])
+    print('It is going to this x',pos['x'])
+    maneuver.goto(x=-0.5,y=y_drone,z=z_drone,yaw=0, duration=10, send=True, ack=True)
 
     time.sleep(20)
 
