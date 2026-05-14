@@ -48,6 +48,8 @@ components="
   maneuver
   uavpos
   uavatt
+  dynamixel
+  phynt
 "
 
 # list of process ids to clean, populated after each spawn
