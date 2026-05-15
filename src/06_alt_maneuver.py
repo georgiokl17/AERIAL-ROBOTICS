@@ -68,23 +68,48 @@ def setup():
 
   # UAVPOS SETTINGS:
    # --- uavpos ---
-  uavpos.set_mass({'mass': 2.3})
+  uavpos.set_mass({'mass': 2.55})
 
   uavpos.set_xyradius({'rxy': 2.0})   # from the slide guideline
 
   uavpos.set_saturation({'sat': {
-        'x': 1,
-        'v': 1,
+        'x': 10,
+        'v': 10,
         'ix': 0
   }})
+  
+ 
+  # if (KPz*KPz-4*KDz*KIz<0):
+  #   Tz = 100
+  #   KDz = KPz/(2*Tz)
+  #   omega = math.sqrt(KPz*KPz-4*KDz*KIz)/(2*KDz)
+  #   print('Tz', Tz)
+  #   print('omega', omega)
+  # else:
+  # Tz1 = -5
+  # KDz = -(Tz1*KPz+KIz)/(Tz1*Tz1)
+  # Tz2 = (-KPz+math.sqrt(KPz*KPz-4*KDz*KIz))/(2*KDz)
 
+
+  Tz1 = -6
+  Tz2 = -6
+  KDz = 20
+  KIz = Tz1*Tz2*KDz
+  KPz = -KDz*(Tz1+Tz2)
+  
+  print('Tz1', Tz1)
+  print('Tz2', Tz2)
+  print('KPz', KPz)
+  print('KDz', KDz)
+  print('KIz', KIz)
+  
   uavpos.set_servo_gain({'gain': {
         'Kpxy': 30.0,
-        'Kpz': 250,
+        'Kpz': KPz,
         'Kvxy': 6.0,
-        'Kvz': 9.0,
-        'Kixy': 10.0,
-        'Kiz': 10.0
+        'Kvz': KDz,
+        'Kixy': 50.0,
+        'Kiz': KIz
   }})
 
   uavpos.set_emerg({'emerg': {
@@ -93,7 +118,7 @@ def setup():
         'dv': 0.2
   }})
   # UAVATT SETTINGS:
-  uavatt.set_mass({'mass': 2.3})
+  uavatt.set_mass({'mass': 2.55})
 
   uavatt.set_wlimit({
         'wmin': 0.0,
@@ -101,11 +126,31 @@ def setup():
   })
 
 
+  KqDxy = 3
+  KqDz = 3
+
+  KqPxy = 60
+  KqPz = 60
+
+  Tqxy = -KqPz/KqDz
+  Tqz = -KqPxy/KqDxy
+
+  
+  print('     ')
+  print('Tqz', Tqz)
+  print('Tqxy', Tqxy)
+
+  print('KqPz', KqPz)
+  print('KqPxy', KqPxy)
+  
+  print('KqDz', KqDz)
+  print('KqDxy', KqDxy)
+
   uavatt.set_servo_gain({'gain': {
-        'Kqxy': 4.0,
-        'Kqz': 0.1,
-        'Kwxy': 1.0,
-        'Kwz': 0.1
+        'Kqxy': KqPxy,
+        'Kqz': KqPz,
+        'Kwxy': KqDxy,
+        'Kwz': KqDz
   }})
 
   uavatt.set_emerg({'emerg': {
@@ -128,7 +173,7 @@ def setup():
   uavatt.connect_port({ 'local': 'rotor_measure', 'remote': 'rotorcraft/rotor_measure'})
 
   geom = {
-        'rotors': 6, 'cx': 0, 'cy': 0, 'cz': 0, 'armlen': 0.40998, 'mass': 2.3,
+        'rotors': 6, 'cx': 0, 'cy': 0, 'cz': 0, 'armlen': 0.40998, 'mass': 2.55,
         'rx': -20, 'ry': 0, 'rz': -1, 'cf': 9.9016e-4, 'ct': 1.9e-5
     }
 
@@ -204,6 +249,7 @@ def move():
     print('It is going to this z',pos2['z'])
     print('It is going to this y',pos2['y'])
     print('It is going to this x',pos2['x'])
+    
     #maneuver.goto(x=0,y=0,z=0,yaw=0, duration=10, send=True, ack=True)
     time.sleep(15)
 
