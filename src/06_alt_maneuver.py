@@ -126,8 +126,8 @@ def setup():
   })
 
 
-  KqDxy = 3.6
-  KqDz = 3.6
+  KqDxy = 3
+  KqDz = 3
 
   KqPxy = 60
   KqPz = 60
