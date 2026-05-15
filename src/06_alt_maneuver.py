@@ -91,9 +91,9 @@ def setup():
   # Tz2 = (-KPz+math.sqrt(KPz*KPz-4*KDz*KIz))/(2*KDz)
 
 
-  Tz1 = -1
-  Tz2 = -9
-  KDz = 25
+  Tz1 = -6
+  Tz2 = -6
+  KDz = 20
   KIz = Tz1*Tz2*KDz
   KPz = -KDz*(Tz1+Tz2)
   
@@ -126,11 +126,31 @@ def setup():
   })
 
 
+  KqDxy = 3.6
+  KqDz = 3.6
+
+  KqPxy = 60
+  KqPz = 60
+
+  Tqxy = -KqPz/KqDz
+  Tqz = -KqPxy/KqDxy
+
+  
+  print('     ')
+  print('Tqz', Tqz)
+  print('Tqxy', Tqxy)
+
+  print('KqPz', KqPz)
+  print('KqPxy', KqPxy)
+  
+  print('KqDz', KqDz)
+  print('KqDxy', KqDxy)
+
   uavatt.set_servo_gain({'gain': {
-        'Kqxy': 4.0,
-        'Kqz': 0.1,
-        'Kwxy': 1.0,
-        'Kwz': 0.1
+        'Kqxy': KqPxy,
+        'Kqz': KqPz,
+        'Kwxy': KqDxy,
+        'Kwz': KqDz
   }})
 
   uavatt.set_emerg({'emerg': {
@@ -229,6 +249,7 @@ def move():
     print('It is going to this z',pos2['z'])
     print('It is going to this y',pos2['y'])
     print('It is going to this x',pos2['x'])
+    
     #maneuver.goto(x=0,y=0,z=0,yaw=0, duration=10, send=True, ack=True)
     time.sleep(15)
 
