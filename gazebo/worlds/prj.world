@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <sdf version="1.5">
   <world name="mrsim">
+  
     <physics name='1ms' type='unused'>
       <max_step_size>0.002000</max_step_size>
       <real_time_factor>1.000000</real_time_factor>
@@ -143,7 +144,7 @@
     </model>
   
     <include>
-      <uri>model://hexa-with-arm</uri>
+      <uri>file:///shared-workspace/gazebo/models/hexa-with-arm</uri>
       <name>hr6</name>
       <pose>1 0 0.21 0 0 0</pose>
     </include>
