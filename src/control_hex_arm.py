@@ -68,7 +68,7 @@ def setup():
   
   # UAVPOS SETTINGS:
    # --- uavpos ---
-  uavpos.set_mass({'mass': 3.55})
+  uavpos.set_mass({'mass': 2.55})
 
   uavpos.set_xyradius({'rxy': 2.0})   # from the slide guideline
 
@@ -77,14 +77,14 @@ def setup():
         'v': 1,
         'ix': 0
   }})
-
+  
   uavpos.set_servo_gain({'gain': {
-        'Kpxy': 5.0,
-        'Kpz': 5.0,
+        'Kpxy': 20,
+        'Kpz': 50,
         'Kvxy': 6.0,
         'Kvz': 6.0,
-        'Kixy': 0.0,
-        'Kiz': 0.0
+        'Kixy': 20,
+        'Kiz': 80.0
   }})
 
   uavpos.set_emerg({'emerg': {
@@ -93,7 +93,7 @@ def setup():
         'dv': 0.2
   }})
   # UAVATT SETTINGS:
-  uavatt.set_mass({'mass': 3.55})
+  uavatt.set_mass({'mass': 2.55})
 
   uavatt.set_wlimit({
         'wmin': 0.0,
@@ -102,10 +102,10 @@ def setup():
 
 
   uavatt.set_servo_gain({'gain': {
-        'Kqxy': 4.0,
-        'Kqz': 0.1,
-        'Kwxy': 1.0,
-        'Kwz': 0.1
+        'Kqxy': 60,
+        'Kqz': 60,
+        'Kwxy': 4,
+        'Kwz': 4
   }})
 
   uavatt.set_emerg({'emerg': {
@@ -128,18 +128,18 @@ def setup():
   uavatt.connect_port({ 'local': 'rotor_measure', 'remote': 'rotorcraft/rotor_measure'})
 
   geom = {
-        'rotors': 6, 'cx': 0, 'cy': 0.0, 'cz': 0.0, 'armlen': 0.40998, 'mass': 3.55,
+        'rotors': 6, 'cx': 0, 'cy': 0.0, 'cz': 0.0, 'armlen': 0.40998, 'mass': 2.55,
         'rx': -20, 'ry': 0, 'rz': -1, 'cf': 9.9016e-4, 'ct': 1.9e-5
     }
   
-  phynt.set_mass({'mass': 3.55})
+  phynt.set_mass({'mass': 2.55})
   phynt.set_geom({'J': [
         0.012, 0,     0,
         0,     0.012, 0,
         0,     0,     0.020] })
   
   phynt.set_af_parameters({
-        'mass': 5.0,   # apparent mass, larger than real mass
+        'mass': 6.0,   # apparent mass, larger than real mass
         'B': [8, 8, 8, 
               1, 1, 1],
         'K': [50, 10, 50, 
@@ -214,12 +214,12 @@ print(pos['z'])
 def move():
     angle_motor=-0.5
     offset_y = math.cos(angle_motor)*0.3
-    offset_z = math.sin(angle_motor)*0.3-0.1-0.025
+    offset_z = math.sin(angle_motor)*0.3-0.1-0.025-0.02
     x_contact=1.5
     y_contact=0
     z_contact=0
-    x_drone = x_contact
-    y_drone = y_contact - offset_y
+    x_drone = x_contact + offset_y
+    y_drone = y_contact 
     z_drone = z_contact - offset_z 
     print('it should go to this z position:',z_drone)
     print('it should go to this y position:',y_drone)
@@ -230,7 +230,7 @@ def move():
 
     time.sleep(2)
     
-    maneuver.goto(x=2.5,y=0,z=2,yaw=0, duration=10, send=True, ack=True)
+    maneuver.goto(x=2.5,y=0,z=2,yaw=3.14/2, duration=10, send=True, ack=True)
     #control command 2
     time.sleep(20)
 
@@ -238,16 +238,17 @@ def move():
     'position': [angle_motor]
       })
 
-    maneuver.goto(x=x_drone,y=y_drone,z=z_drone,yaw=0, duration=10, send=True, ack=True)
+    maneuver.goto(x=x_drone,y=y_drone,z=z_drone,yaw=3.14/2, duration=10, send=True, ack=True)
 
-    time.sleep(20)
-    pos = state['pos']
-    print('It is going to this z',pos['z'])
-    print('It is going to this y',pos['y'])
-    print('It is going to this x',pos['x'])
-    maneuver.goto(x=-0.5,y=y_drone,z=z_drone,yaw=0, duration=10, send=True, ack=True)
+    time.sleep(10)
+    state2 = pom.frame('robot')['frame']
+    pos2 = state2['pos']
+    print('It is going to this z',pos2['z'])
+    print('It is going to this y',pos2['y'])
+    print('It is going to this x',pos2['x'])
+    maneuver.goto(x=-1,y=y_drone,z=z_drone,yaw=3.14/2, duration=10, send=True, ack=True)
 
-    time.sleep(20)
+    time.sleep(10)
 
 # --- start ----------------------------------------------------------------
 #

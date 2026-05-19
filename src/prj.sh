@@ -1,5 +1,5 @@
 #!/bin/sh
-
+export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/shared-workspace/gazebo/models
 usage() {
   echo ""
   echo "Usage: $(basename $0) [options]"

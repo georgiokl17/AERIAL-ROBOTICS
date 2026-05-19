@@ -78,19 +78,7 @@ def setup():
         'ix': 0
   }})
   
- 
-  # if (KPz*KPz-4*KDz*KIz<0):
-  #   Tz = 100
-  #   KDz = KPz/(2*Tz)
-  #   omega = math.sqrt(KPz*KPz-4*KDz*KIz)/(2*KDz)
-  #   print('Tz', Tz)
-  #   print('omega', omega)
-  # else:
-  # Tz1 = -5
-  # KDz = -(Tz1*KPz+KIz)/(Tz1*Tz1)
-  # Tz2 = (-KPz+math.sqrt(KPz*KPz-4*KDz*KIz))/(2*KDz)
-
-
+  
   Tz1 = -6
   Tz2 = -6
   KDz = 20
@@ -127,7 +115,7 @@ def setup():
 
 
   KqDxy = 3
-  KqDz = 3
+  KqDz = 4
 
   KqPxy = 60
   KqPz = 60
@@ -250,7 +238,7 @@ def move():
     print('It is going to this y',pos2['y'])
     print('It is going to this x',pos2['x'])
     
-    #maneuver.goto(x=0,y=0,z=0,yaw=0, duration=10, send=True, ack=True)
+    maneuver.goto(x=1,y=0,z=0,yaw=0, duration=15, send=True, ack=True)
     time.sleep(15)
 
 # --- start ----------------------------------------------------------------
