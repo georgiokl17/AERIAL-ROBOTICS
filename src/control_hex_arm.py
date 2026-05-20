@@ -132,34 +132,38 @@ def setup():
         'rx': -20, 'ry': 0, 'rz': -1, 'cf': 9.9016e-4, 'ct': 1.9e-5
     }
   
+  Jxx = 0.0136+0.1*((0.15*math.cos(0))**2+(-0.1-0.15*math.sin(0))**2)
+  Jyy = 0.0124 + 0.1*(-0.1-0.15*math.sin(0))**2
+  Jzz = 0.0204 +0.1*(0.15*math.cos(0))**2
+ 
   phynt.set_mass({'mass': 2.55})
   phynt.set_geom({'J': [
-        0.012, 0,     0,
-        0,     0.012, 0,
-        0,     0,     0.020] })
+        Jxx, 0,     0,
+        0,     Jyy, 0,
+        0,     0,     Jzz] })
   
   phynt.set_af_parameters({
-        'mass': 6.0,   # apparent mass, larger than real mass
-        'B': [8, 8, 8, 
-              1, 1, 1],
+        'mass': 4.0,   # apparent mass, larger than real mass
+        'B': [2*50*4, 2*50*4, 2*50*4, 
+              2*5*4, 2*5*4, 2*5*4],
         'K': [50, 10, 50, 
               5, 5, 5],
-        'J': [0.012, 0,     0,
-              0,     0.012, 0,
-              0,     0,     0.020]
+        'J': [Jxx+0.005, 0,     0,
+              0,    Jyy+0.005, 0,
+              0,     0,   Jzz+0.005]
         
     })
   phynt.set_wo_gains({ #idk all these from chat gpt and documentation
-        'K': [1, 1, 1, 1, 1, 1]
+        'K': [500, 500, 500, 20, 20, 10]
     })
 
   phynt.set_wo_fc({
-      'fc': [20, 20, 20, 20, 20, 20]
+      'fc': [7.5, 7.5, 7.5, 2.5, 2.5, 2.5]
   })
 
   phynt.enable({
       'enable': {
-          'wo': False,
+          'wo': True,
           'af': True
       }})
   uavatt.set_gtmrp_geom(geom) #changed this only to have the cf as a variable we can use
@@ -200,7 +204,7 @@ def setup():
   rotorcraft.set_imu_calibration(variance_imu)
 
   
-
+#i wann 
 #Modified this from state_to_nhfc to be able to send the state of the drone to both nhfc and maneuver components
 
 
@@ -224,6 +228,7 @@ def move():
     print('it should go to this z position:',z_drone)
     print('it should go to this y position:',y_drone)
     print('it should go to this x position:',x_drone)
+    print('external wrench at begining',phynt.external_wrench())
     maneuver.set_bounds(xmin=-5,xmax=5,ymin=-5,ymax=5,zmin=0,zmax=5,yawmin=0,yawmax=3.14) #setting bounds for the maneuver component to make sure the drone does not go out of a certain area)
 
     maneuver.set_current_state() 
@@ -232,15 +237,20 @@ def move():
     
     maneuver.goto(x=2.5,y=0,z=2,yaw=3.14/2, duration=10, send=True, ack=True)
     #control command 2
-    time.sleep(20)
+    
 
+    time.sleep(20)
+    print('external wrench at first pos',phynt.external_wrench())
     dynamixel.set_position({  #setting fixed initial position of motor
     'position': [angle_motor]
       })
 
     maneuver.goto(x=x_drone,y=y_drone,z=z_drone,yaw=3.14/2, duration=10, send=True, ack=True)
+    print('external wrench when opening arm',phynt.external_wrench())
 
     time.sleep(10)
+    print('external wrench at second pos',phynt.external_wrench())
+
     state2 = pom.frame('robot')['frame']
     pos2 = state2['pos']
     print('It is going to this z',pos2['z'])
@@ -264,6 +274,7 @@ def start():
 
   #rotorcraft.log('../logs/01_Quadrotor/rotorcraft.log')
   rotorcraft.start()
+  phynt.log('../phynt.log')
   time.sleep(0.5)
 
   uavpos.set_current_position() # must be before servo otherwise it interrupts the servo activity
@@ -283,12 +294,13 @@ def start():
 # Stop motors. To be called interactively
 def stop():
   rotorcraft.stop()
-  rotorcraft.log_stop()
+  phynt.log_stop()
 
 
   pom.log_stop()
 
   optitrack.unset_logfile()
+  phynt.stop()
 
 
 ## interactively, one can start the simulation with
