@@ -120,6 +120,8 @@ def setup():
   phynt.connect_port({'local': 'state', 'remote': 'pom/frame/robot'})
   phynt.connect_port({'local': 'reference', 'remote': 'maneuver/desired'})
 
+  phynt.connect_port({'local': 'wrench_measure', 'remote': 'uavatt/wrench_measure'})  
+  
   uavpos.connect_port({ 'local': 'state', 'remote': 'pom/frame/robot'})
 
   uavpos.connect_port({'local': 'reference', 'remote': 'phynt/desired'})
@@ -154,11 +156,11 @@ def setup():
         
     })
   phynt.set_wo_gains({ #idk all these from chat gpt and documentation
-        'K': [500, 500, 500, 20, 20, 10]
+        'K': [1, 1, 1, 1, 1, 1]
     })
 
   phynt.set_wo_fc({
-      'fc': [7.5, 7.5, 7.5, 2.5, 2.5, 2.5]
+      'fc': [20, 20, 20, 20, 20, 20]
   })
 
   phynt.enable({
@@ -212,6 +214,7 @@ def setup():
 
 state = pom.frame('robot')['frame']
 pos = state['pos']
+
 print(pos['x'])
 print(pos['z'])
 # Function that make the quadrotor follow the given trajectory
@@ -228,7 +231,7 @@ def move():
     print('it should go to this z position:',z_drone)
     print('it should go to this y position:',y_drone)
     print('it should go to this x position:',x_drone)
-    print('external wrench at begining',phynt.external_wrench())
+    
     maneuver.set_bounds(xmin=-5,xmax=5,ymin=-5,ymax=5,zmin=0,zmax=5,yawmin=0,yawmax=3.14) #setting bounds for the maneuver component to make sure the drone does not go out of a certain area)
 
     maneuver.set_current_state() 
@@ -237,19 +240,22 @@ def move():
     
     maneuver.goto(x=2.5,y=0,z=2,yaw=3.14/2, duration=10, send=True, ack=True)
     #control command 2
-    
+    desired_phynt = phynt.desired()['desired']['pos']
+    print('this is the first desired pos', desired_phynt) 
 
     time.sleep(20)
-    print('external wrench at first pos',phynt.external_wrench())
+    
     dynamixel.set_position({  #setting fixed initial position of motor
     'position': [angle_motor]
       })
 
     maneuver.goto(x=x_drone,y=y_drone,z=z_drone,yaw=3.14/2, duration=10, send=True, ack=True)
-    print('external wrench when opening arm',phynt.external_wrench())
+  
 
     time.sleep(10)
-    print('external wrench at second pos',phynt.external_wrench())
+    desired_phynt2 = phynt.desired()['desired']['pos']
+    print('this is the second desired pos', desired_phynt2) 
+    
 
     state2 = pom.frame('robot')['frame']
     pos2 = state2['pos']
@@ -301,6 +307,9 @@ def stop():
 
   optitrack.unset_logfile()
   phynt.stop()
+  uavatt.stop()
+  maneuver.stop()
+  uavpos.stop()
 
 
 ## interactively, one can start the simulation with
@@ -315,6 +324,4 @@ def stop():
 def simulation():
   setup()
   start()
-  stop()
-  
-    
+  stop() 
